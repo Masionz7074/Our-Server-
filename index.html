@@ -45,36 +45,40 @@
     }
 
     .section {
-      width: 250px;
-      padding: 15px;
+      width: 200px;
+      /* Smaller buttons */
+      padding: 12px;
+      /* Smaller padding */
       border-radius: 10px;
       text-align: center;
       transition: transform 0.2s ease, background-color 0.3s ease;
+      background-color: transparent;
+      /* Remove background color */
+      border: 2px solid #c979c4;
+      /* Add border */
     }
 
     .section:hover {
       transform: translateY(-5px);
+      background-color: #c979c4;
+      /* Add background color on hover */
     }
 
     .section img {
-      max-width: 80px;
+      max-width: 70px;
+      /* Smaller images */
       margin-bottom: 10px;
     }
 
     .section h3 {
       margin-bottom: 5px;
+      font-size: 1rem;
     }
 
     .section p {
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    footer {
-      margin-top: auto;
-      padding: 20px;
-      text-align: center;
       font-size: 12px;
+      /* Smaller font size */
+      line-height: 1.4;
     }
 
     /* Color scheme classes */
@@ -89,7 +93,13 @@
     }
 
     .white-theme .section {
+      border-color: #e0e0e0;
+      /* Adjust border color for white theme */
+    }
+
+    .white-theme .section:hover {
       background-color: #e0e0e0;
+      /* Adjust hover color for white theme */
     }
 
     .black-theme {
@@ -105,10 +115,6 @@
       background-color: #1E1A24;
     }
 
-    .black-theme .section {
-      background-color: #c979c4;
-    }
-
     /* Dropdown styles */
     .dropdown {
       position: relative;
@@ -117,19 +123,22 @@
     }
 
     .dropbtn {
-      background-color: #c979c4;
+      background-color: transparent;
+      /* Remove background color */
       color: white;
-      padding: 10px 20px;
-      border: none;
+      padding: 8px 16px;
+      /* Smaller padding */
+      border: 2px solid #c979c4;
+      /* Add border */
       border-radius: 5px;
       cursor: pointer;
+      font-size: 1rem;
     }
 
     .dropdown-content {
       display: none;
       position: absolute;
-      background-color:   
- #2b2833;
+      background-color: #2b2833;
       min-width: 160px;
       box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
       z-index: 1;
@@ -195,10 +204,6 @@
       </div>
     </div>
   </div>
-
-  <footer>
-    &copy; 2023 Lise Network
-  </footer>
 
   <script>
     function setTheme(theme) {
