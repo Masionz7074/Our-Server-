@@ -7,29 +7,43 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, #1a1a3d, #ff69b4, #87cefa);
+            background-size: cover;
+            color: #f4f4f4;
             margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            text-align: center;
         }
         h1 {
-            color: #333;
+            color: #ffd700;
             margin-top: 20px;
+            text-shadow: 0px 0px 10px #ffd700;
+        }
+        h2 {
+            color: #f4f4f4;
+            text-shadow: 0px 0px 5px #000;
+            margin: 30px 0 10px;
+        }
+        .gallery-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
         }
         .gallery {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 30px;
-            margin-top: 20px;
         }
         .gallery img {
             max-width: 200px;
             height: auto;
             border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 4px 12px rgba(255, 215, 0, 0.8); /* Golden glow */
             transition: transform 0.3s;
         }
         .gallery img:hover {
@@ -41,23 +55,84 @@
             background-color: #333;
             color: #f4f4f4;
             font-size: 0.9em;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
     <h1>House Hold Pets</h1>
-    <p>Enjoy a collection of adorable household pet photos!</p>
 
-    <div class="gallery">
-        <img src="images/Cat1.png" alt="Cat 1">
-        <img src="images/Cat2.png" alt="Cat 2">
-        <img src="images/Cat3.png" alt="Cat 3">
-        <img src="images/Cat4.png" alt="Cat 4">
-        <img src="images/Cat5.png" alt="Cat 5">
-        <img src="images/Cat6.png" alt="Cat 6">
-        <img src="images/Cat7.png" alt="Cat 7">
-        <img src="images/Cat8.png" alt="Cat 8">
+    <div class="gallery-section">
+        <h2>MaryJane</h2>
+        <div class="gallery">
+            <img src="images/Mj1.png" alt="MaryJane 1">
+            <img src="images/Mj2.png" alt="MaryJane 2">
+            <img src="images/Mj3.png" alt="MaryJane 3">
+            <img src="images/Mj4.png" alt="MaryJane 4">
+            <img src="images/Mj5.png" alt="MaryJane 5">
+            <img src="images/Mj6.png" alt="MaryJane 6">
+        </div>
+    </div>
+
+    <div class="gallery-section">
+        <h2>Emma</h2>
+        <div class="gallery">
+            <img src="images/Em1.png" alt="Emma 1">
+            <img src="images/Em2.png" alt="Emma 2">
+            <img src="images/Em3.png" alt="Emma 3">
+            <img src="images/Em4.png" alt="Emma 4">
+            <img src="images/Em5.png" alt="Emma 5">
+            <img src="images/Em6.png" alt="Emma 6">
+        </div>
+    </div>
+
+    <div class="gallery-section">
+        <h2>Meka</h2>
+        <div class="gallery">
+            <img src="images/Ma1.png" alt="Meka 1">
+            <img src="images/Ma2.png" alt="Meka 2">
+            <img src="images/Ma3.png" alt="Meka 3">
+            <img src="images/Ma4.png" alt="Meka 4">
+            <img src="images/Ma5.png" alt="Meka 5">
+            <img src="images/Ma6.png" alt="Meka 6">
+        </div>
+    </div>
+
+    <div class="gallery-section">
+        <h2>Aria</h2>
+        <div class="gallery">
+            <img src="images/Ai1.png" alt="Aria 1">
+            <img src="images/Ai2.png" alt="Aria 2">
+            <img src="images/Ai3.png" alt="Aria 3">
+            <img src="images/Ai4.png" alt="Aria 4">
+            <img src="images/Ai5.png" alt="Aria 5">
+            <img src="images/Ai6.png" alt="Aria 6">
+        </div>
+    </div>
+
+    <div class="gallery-section">
+        <h2>Freddy</h2>
+        <div class="gallery">
+            <img src="images/Fy1.png" alt="Freddy 1">
+            <img src="images/Fy2.png" alt="Freddy 2">
+            <img src="images/Fy3.png" alt="Freddy 3">
+            <img src="images/Fy4.png" alt="Freddy 4">
+            <img src="images/Fy5.png" alt="Freddy 5">
+            <img src="images/Fy6.png" alt="Freddy 6">
+        </div>
+    </div>
+
+    <div class="gallery-section">
+        <h2>Phines</h2>
+        <div class="gallery">
+            <img src="images/Ps1.png" alt="Phines 1">
+            <img src="images/Ps2.png" alt="Phines 2">
+            <img src="images/Ps3.png" alt="Phines 3">
+            <img src="images/Ps4.png" alt="Phines 4">
+            <img src="images/Ps5.png" alt="Phines 5">
+            <img src="images/Ps6.png" alt="Phines 6">
+        </div>
     </div>
 
     <footer>
