@@ -7,8 +7,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a3d, #ff69b4, #87cefa);
-            background-size: cover;
+            background: linear-gradient(135deg, #ff4500, #ff8c00, #ffd700, #ff1493, #1e3c72, #006400, #ffa500);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
             color: #f4f4f4;
             margin: 0;
             padding: 0;
@@ -17,38 +18,53 @@
             min-height: 100vh;
             text-align: center;
         }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         h1 {
             color: #ffd700;
             margin-top: 20px;
             text-shadow: 0px 0px 10px #ffd700;
         }
+
         h2 {
-            color: #f4f4f4;
+            color: #ff8c00;
             text-shadow: 0px 0px 5px #000;
             margin: 30px 0 10px;
+            font-size: 1.5em;
         }
+
         .gallery-section {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin: 20px 0;
+            padding: 0 10px;
         }
+
         .gallery {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 30px;
+            gap: 15px;
         }
+
         .gallery img {
-            max-width: 200px;
+            max-width: 180px;
             height: auto;
             border-radius: 8px;
             box-shadow: 0px 4px 12px rgba(255, 215, 0, 0.8); /* Golden glow */
             transition: transform 0.3s;
         }
+
         .gallery img:hover {
             transform: scale(1.05);
         }
+
         footer {
             margin-top: auto;
             padding: 10px;
@@ -56,6 +72,31 @@
             color: #f4f4f4;
             font-size: 0.9em;
             text-align: center;
+        }
+
+        /* Responsive design for mobile */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            h2 {
+                font-size: 1.2em;
+                margin: 20px 0 10px;
+            }
+
+            .gallery img {
+                max-width: 100px;
+            }
+
+            .gallery-section {
+                padding: 0 5px;
+            }
+
+            footer {
+                font-size: 0.8em;
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -132,13 +173,6 @@
             <img src="images/Ps4.png" alt="Phines 4">
             <img src="images/Ps5.png" alt="Phines 5">
             <img src="images/Ps6.png" alt="Phines 6">
-        </div>
-    </div>
-<div class="gallery-section">
-        <h2>Meka and Mjane</h2>
-        <div class="gallery">
-            <img src="images/Ma+Mj1.png" alt="Meka 1">
-            <img src="images/Ma+Mj2.png" alt="Meka 2">
         </div>
     </div>
 
