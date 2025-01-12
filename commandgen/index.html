@@ -117,4 +117,56 @@
       var price = document.getElementById("pricePurchase").value;
       var scoreboard = document.getElementById("scoreboardPurchase").value;
       var success = document.getElementById("successPurchase").value;
-      var error = document.getElementById("error
+      var error = document.getElementById("errorPurchase").value;
+
+      var commands = [];
+      commands.push(`/give @initiator[scores={${scoreboard}=${price}..}] ${item} ${quantity}`);
+      commands.push(`/tellraw @initiator[scores={${scoreboard}=${price}..}] {"rawtext":[{"text":"${success}§r"}]}`);
+      commands.push(`/tellraw @initiator[scores={${scoreboard}=..${price - 1}}] {"rawtext":[{"text":"${error}§r"}]}`);
+      commands.push(`/playsound mob.villager.yes @initiator[scores={${scoreboard}=${price}..}]`);
+      commands.push(`/playsound mob.villager.no @initiator[scores={${scoreboard}=..${price - 1}}]`);
+      commands.push(`/scoreboard players remove @initiator[scores={${scoreboard}=${price}..}] ${scoreboard} ${price}`);
+
+      var resultadoDiv = document.getElementById("purchaseResult");
+      resultadoDiv.innerHTML = "<h4>Purchase Commands Generated:</h4><pre>" + comandos.join("\n") + "</pre>";
+
+      var botonCopia = document.createElement("button");
+      botonCopia.textContent = "Copy";
+      botonCopia.addEventListener("click", function () {
+        copyToClipboard("purchaseResult");
+      });
+
+      resultadoDiv.appendChild(botonCopia);
+    }
+
+    function generateSaleCommands() {
+      var item = document.getElementById("itemSale").value;
+      var quantity = document.getElementById("quantitySale").value;
+      var price = document.getElementById("priceSale").value;
+      var scoreboard = document.getElementById("scoreboardSale").value;
+      var success = document.getElementById("successSale").value;
+      var error = document.getElementById("errorSale").value;
+
+      var commands = [];
+      commands.push(`/tellraw @initiator[hasitem={item=${item},quantity=${quantity}..}] {"rawtext":[{"text":"${success}§r"}]}`);
+      commands.push(`/playsound mob.villager.yes @initiator[hasitem={item=${item},quantity=${quantity}..}]`);
+      commands.push(`/tellraw @initiator[hasitem={item=${item},quantity=..${quantity - 1}}] {"rawtext":[{"text":"${error}§r"}]}`);
+      commands.push(`/playsound mob.villager.no @initiator[hasitem={item=${item},quantity=..${quantity - 1}}]`);
+      commands.push(`/scoreboard players add @initiator[hasitem={item=${item},quantity=${quantity}..}] ${scoreboard} ${price}`);
+      commands.push(`/clear @initiator[hasitem={item=${item},quantity=${quantity}..}] ${item} 0 ${quantity}`);
+
+      var resultadoDiv = document.getElementById("saleResult");
+      resultadoDiv.innerHTML = "<h4>Sale Commands Generated:</h4><pre>" + comandos.join("\n") + "</pre>";
+
+      var botonCopia = document.createElement("button");
+      botonCopia.textContent = "Copy";
+      botonCopia.addEventListener("click", function () {
+        copyToClipboard("saleResult");
+      });
+
+      resultadoDiv.appendChild(botonCopia);
+    }
+  </script>
+
+</body>
+</html>
