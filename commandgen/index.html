@@ -128,7 +128,7 @@
       commands.push(`/scoreboard players remove @initiator[scores={${scoreboard}=${price}..}] ${scoreboard} ${price}`);
 
       var resultadoDiv = document.getElementById("purchaseResult");
-      resultadoDiv.innerHTML = "<h4>Purchase Commands Generated:</h4><pre>" + comandos.join("\n") + "</pre>";
+      resultadoDiv.innerHTML = "<h4>Purchase Commands Generated:</h4><pre>" + commands.join("\n") + "</pre>";
 
       var botonCopia = document.createElement("button");
       botonCopia.textContent = "Copy";
@@ -156,7 +156,7 @@
       commands.push(`/clear @initiator[hasitem={item=${item},quantity=${quantity}..}] ${item} 0 ${quantity}`);
 
       var resultadoDiv = document.getElementById("saleResult");
-      resultadoDiv.innerHTML = "<h4>Sale Commands Generated:</h4><pre>" + comandos.join("\n") + "</pre>";
+      resultadoDiv.innerHTML = "<h4>Sale Commands Generated:</h4><pre>" + commands.join("\n") + "</pre>";
 
       var botonCopia = document.createElement("button");
       botonCopia.textContent = "Copy";
