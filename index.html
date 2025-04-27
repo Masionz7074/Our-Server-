@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedrock Script Obfuscator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Minecraft Bedrock Script Obfuscator</h1>
+        <p>Paste your original JavaScript code below. Click "Obfuscate" to generate harder-to-read code.</p>
+
+        <div class="code-section">
+            <h2>Original Code</h2>
+            <textarea id="originalCode" placeholder="// Paste your script API code here..."></textarea>
+        </div>
+
+        <button id="obfuscateButton">Obfuscate Code</button>
+
+        <div class="code-section">
+            <h2>Obfuscated Code</h2>
+            <textarea id="obfuscatedCode" readonly placeholder="// Obfuscated code will appear here..."></textarea>
+        </div>
+
+        <p class="warning">
+            <strong>Note:</strong> Client-side obfuscation is a deterrent, not absolute security. More complex scripts or very strong obfuscation settings may affect performance or compatibility.
+        </p>
+    </div>
+
+    <!-- Include the javascript-obfuscator library -->
+    <!-- !! You MUST download javascript-obfuscator.js and place it in the js/ folder !! -->
+    <script src="js/javascript-obfuscator.js"></script>
+    <!-- Include your custom script -->
+    <script src="js/script.js"></script>
+</body>
+</html>
