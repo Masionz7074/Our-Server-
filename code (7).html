@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Building Tools</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0; /* Remove body padding as container adds it */
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 40px; /* Add space at the bottom */
+        }
+
+        .tab-container {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            background-color: #2a2a2a; /* Background matches container */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            overflow: hidden; /* Contain the inner border-radius */
+        }
+
+        .tabs {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            border-bottom: 1px solid #444;
+            background-color: #3a3a3a; /* Darker background for the tab bar */
+        }
+
+        .tab-button {
+            padding: 15px 20px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            color: #c0c0c0; /* Lighter gray for inactive tabs */
+            font-size: 1em;
+            transition: color 0.3s ease;
+             text-align: center;
+             flex-grow: 1; /* Allow tabs to fill space */
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #f0f0f0; /* Slightly brighter on hover */
+        }
+
+        .tab-button.active {
+            color: #00ff00; /* Minecraft green for active tab */
+            border-bottom: 2px solid #00ff00; /* Underline for active tab */
+            font-weight: bold;
+             background-color: #2a2a2a; /* Match content background */
+             cursor: default;
+        }
+
+        .tab-content {
+            padding: 20px; /* Padding inside the content area */
+        }
+
+         /* Styles for the existing containers within tab content */
+         .tab-content .container {
+            background-color: transparent; /* No background or shadow for inner container */
+            padding: 0; /* No extra padding inside tab content */
+            box-shadow: none;
+             border: none;
+            max-width: 100%; /* Allow inner container to take full width */
+            margin-top: 0; /* Remove margin-top */
+             margin-bottom: 0; /* Remove margin-bottom */
+        }
+
+
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            margin-bottom: 20px;
+            margin-top: 0; /* Remove margin-top from inner H1 */
+        }
+         h2 {
+             color: #00cc00;
+             border-bottom: 1px solid #333;
+             padding-bottom: 8px;
+             margin-bottom: 15px;
+             margin-top: 20px; /* Add space above inner H2 */
+         }
+        .tab-content h2:first-child {
+             margin-top: 0; /* No top margin for the first H2 in content */
+         }
+
+
+        p {
+             text-align: center;
+             margin-bottom: 20px;
+        }
+
+
+        .input-section,
+        .options-section,
+        .output-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+
+
+        input[type="file"] {
+            display: block;
+            margin-bottom: 15px;
+            color: #f0f0f0;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-top: 15px;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .option-group label {
+            margin-right: 15px;
+            min-width: 150px;
+            color: #c0c0c0;
+        }
+
+        .option-group input[type="number"],
+        .option-group input[type="range"],
+        .option-group input[type="checkbox"],
+         .option-group input[type="text"]
+         {
+             margin-right: 5px;
+         }
+         .option-group input[type="number"],
+         .option-group input[type="text"] {
+             padding: 5px;
+             border: 1px solid #555;
+             border-radius: 4px;
+             background-color: #3a3a3a;
+             color: #f0f0f0;
+             width: 60px;
+         }
+         .option-group input[type="text"] {
+             width: calc(100% - 180px);
+             min-width: 100px;
+         }
+
+        .option-group input[type="range"] {
+             flex-grow: 1;
+             height: 20px;
+        }
+
+        .button-group {
+            margin-top: 15px;
+            margin-bottom: 0; /* Remove bottom margin if it's the last element */
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+         .output-section .button-group { /* Ensure margin is added only below output buttons */
+             margin-bottom: 15px;
+         }
+
+
+        button {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #008800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+             flex-grow: 1;
+             min-width: 120px;
+             text-align: center;
+        }
+
+        button:hover {
+            background-color: #00aa00;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        #outputCommands {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #3a3a3a;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            resize: vertical;
+            box-sizing: border-box;
+             margin-bottom: 10px;
+        }
+
+        #copyButton {
+            background-color: #005588;
+        }
+
+        #copyButton:hover {
+             background-color: #0077aa;
+        }
+
+         #downloadButton, #downloadNBTButton {
+             background-color: #885500;
+         }
+          #downloadButton:hover, #downloadNBTButton:hover {
+              background-color: #aa7700;
+          }
+
+        .status-message {
+            margin-top: 15px;
+            text-align: center;
+            color: #ffff00;
+             min-height: 1.2em;
+        }
+
+         /* Hide the processing canvas */
+        #processingCanvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tab-container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('qrTool')">QR Code to MCFunction</button>
+            <button class="tab-button" onclick="openTab('nbtTool')">MCFunction to Nifty Building Tool NBT</button>
+        </div>
+
+        <div id="qrTool" class="tab-content">
+            <div class="container">
+                <h1>QR Code Image to Black/White Pixel Art (Bedrock)</h1>
+                 <p>Converts an image containing a QR code into pixel art commands using Black Concrete and White Wool.</p>
+
+                <div class="input-section">
+                    <h2>1. Upload Image</h2>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <img id="imagePreview" src="#" alt="Image Preview" style="display: none;">
+                </div>
+
+                <div class="options-section">
+                    <h2>2. Pixel Art Options</h2>
+                     <div class="option-group">
+                        <label for="pixelRatio">Pixels per Block:</label>
+                        <input type="number" id="pixelRatio" value="4" min="1">
+                         <span>(Higher = Smaller Output Art)</span>
+                    </div>
+                    <div class="option-group">
+                        <label for="threshold">Black/White Threshold:</label>
+                        <input type="range" id="threshold" value="128" min="0" max="255">
+                         <span id="thresholdValue">128</span>
+                    </div>
+                     <div class="option-group">
+                        <label for="baseHeight">Base Height (Y):</label>
+                        <input type="number" id="baseHeight" value="64" min="-64">
+                    </div>
+                     <div class="option-group">
+                        <label for="zOffset">Z Offset:</label>
+                        <input type="number" id="zOffset" value="0">
+                    </div>
+                     <div class="option-group">
+                        <label for="ditheringEnabled">Enable Dithering:</label>
+                        <input type="checkbox" id="ditheringEnabled" checked>
+                        <span>(Recommended for smoother B&W)</span>
+                    </div>
+                </div>
+
+                <div class="output-section">
+                    <h2>3. Generated Commands</h2>
+                    <button id="convertButton" disabled>Convert Image</button>
+                    <div id="imageStatusMessage" class="status-message">Select an image to begin.</div>
+
+                    <textarea id="outputCommands" readonly placeholder="Generated /setblock commands will appear here..."></textarea>
+
+                    <div class="button-group">
+                         <button id="copyButton" disabled>Copy Commands</button>
+                         <button id="downloadButton" disabled>Download .mcfunction</button>
+                    </div>
+                </div>
+
+                <!-- Hidden canvas for image processing -->
+                <canvas id="processingCanvas"></canvas>
+             </div>
+        </div>
+
+        <div id="nbtTool" class="tab-content" style="display:none;"> <!-- Initially hidden -->
+            <div class="container">
+                 <h1>MCFunction to Nifty Building Tool NBT Converter</h1>
+                 <p>Upload an .mcfunction file (e.g., generated by the tool above) to convert it into NBT format for the Nifty Building Tool NPCs.</p>
+
+                 <div class="input-section">
+                     <h2>1. Upload .mcfunction File</h2>
+                     <input type="file" id="input-file" accept=".mcfunction">
+                 </div>
+
+                 <div class="options-section">
+                     <h2>2. NBT Options</h2>
+                     <div class="option-group">
+                         <label for="nbt-title">Build Title:</label>
+                         <input type="text" id="nbt-title" value="MyPixelArt">
+                         <span>(Used for NPC tags and NBT file name)</span>
+                     </div>
+                     <div class="option-group">
+                         <label for="commands-per-npc">Commands per NPC:</label>
+                         <input type="number" id="commands-per-npc" value="346" min="1">
+                         <span>(Limit commands per NPC dialogue)</span>
+                     </div>
+                 </div>
+
+                 <div class="output-section">
+                     <h2>3. Download NBT</h2>
+                     <div id="nbtStatusMessage" class="status-message">Select an .mcfunction file to convert.</div>
+                     <!-- The download is triggered automatically by the JS after processing -->
+                 </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script>
+        // --- Tab Functionality Script ---
+        function openTab(tabId) {
+            // Get all elements with class="tab-content" and hide them
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].style.display = 'none';
+            }
+
+            // Get all elements with class="tab-button" and remove the class "active"
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+
+            // Show the current tab, and add an "active" class to the button that opened the tab
+            document.getElementById(tabId).style.display = 'block';
+            // Find the button that has the onclick corresponding to this tabId
+             for (let i = 0; i < tabButtons.length; i++) {
+                if (tabButtons[i].getAttribute('onclick').includes(`openTab('${tabId}')`)) {
+                     tabButtons[i].classList.add('active');
+                     break;
+                }
+            }
+        }
+
+         // Automatically open the first tab on page load
+         document.addEventListener('DOMContentLoaded', function() {
+             openTab('qrTool'); // Opens the QR code tab by default
+         });
+
+
+        // --- Image to MCFunction Tool Script ---
+        // This section remains largely the same, using the original IDs
+
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const processingCanvas = document.getElementById('processingCanvas');
+        const ctx = processingCanvas.getContext('2d');
+        const convertButton = document.getElementById('convertButton');
+        const outputCommands = document.getElementById('outputCommands');
+        const copyButton = document.getElementById('copyButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const imageStatusMessage = document.getElementById('imageStatusMessage');
+
+        const pixelRatioInput = document.getElementById('pixelRatio');
+        const baseHeightInput = document.getElementById('baseHeight');
+        const zOffsetInput = document.getElementById('zOffset');
+        const ditheringEnabledInput = document.getElementById('ditheringEnabled');
+        const thresholdInput = document.getElementById('threshold');
+        const thresholdValueSpan = document.getElementById('thresholdValue');
+
+        thresholdInput.addEventListener('input', function() {
+            thresholdValueSpan.textContent = this.value;
+        });
+
+        const minecraftPalette = [
+             { id: 'minecraft:black_concrete', color: [18, 20, 26] },
+             { id: 'minecraft:white_wool', color: [242, 242, 242] }
+        ];
+
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    convertButton.disabled = false;
+                    outputCommands.value = '';
+                    copyButton.disabled = true;
+                    downloadButton.disabled = true;
+                    imageStatusMessage.textContent = 'Image loaded. Adjust options and click Convert.';
+                };
+                reader.onerror = function() {
+                     imageStatusMessage.textContent = 'Error reading file.';
+                     convertButton.disabled = true;
+                     imagePreview.style.display = 'none';
+                     copyButton.disabled = true;
+                     downloadButton.disabled = true;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                 imagePreview.style.display = 'none';
+                 convertButton.disabled = true;
+                 outputCommands.value = '';
+                 copyButton.disabled = true;
+                 downloadButton.disabled = true;
+                 imageStatusMessage.textContent = 'Select an image to begin.';
+            }
+        });
+
+        convertButton.addEventListener('click', function() {
+            if (!imagePreview.src || imagePreview.src === '#') {
+                imageStatusMessage.textContent = 'No image loaded.';
+                return;
+            }
+
+            imageStatusMessage.textContent = 'Converting...';
+            convertButton.disabled = true;
+            copyButton.disabled = true;
+            downloadButton.disabled = true;
+            outputCommands.value = '';
+
+            const img = new Image();
+            img.onload = function() {
+                processImage(img);
+            };
+            img.onerror = function() {
+                imageStatusMessage.textContent = 'Error loading image for processing.';
+                convertButton.disabled = false;
+            };
+            img.src = imagePreview.src;
+        });
+
+        function findClosestColor(pixelColor, palette) {
+            const black = palette[0];
+            const white = palette[1];
+            const r = pixelColor[0];
+            const g = pixelColor[1];
+            const b = pixelColor[2];
+            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+            if (luminance < 128) {
+                return black;
+            } else {
+                return white;
+            }
+        }
+
+        function diffuseError(workingPixels, width, height, px, py, er, eg, eb, weight) {
+             if (px >= 0 && px < width && py >= 0 && py < height) {
+                 const idx = (py * width + px) * 4;
+                 if (workingPixels[idx + 3] > 10) {
+                     workingPixels[idx] = Math.max(0, Math.min(255, workingPixels[idx] + er * weight));
+                     workingPixels[idx + 1] = Math.max(0, Math.min(255, workingPixels[idx + 1] + eg * weight));
+                     workingPixels[idx + 2] = Math.max(0, Math.min(255, workingPixels[idx + 2] + eb * weight));
+                 }
+             }
+         }
+
+        function processImage(img) {
+            const pixelRatio = parseInt(pixelRatioInput.value) || 1;
+            const baseHeight = parseInt(baseHeightInput.value) || 64;
+            const zOffset = parseInt(zOffsetInput.value) || 0;
+            const ditheringEnabled = ditheringEnabledInput.checked;
+            const threshold = parseInt(thresholdInput.value) || 128;
+
+            if (pixelRatio < 1) {
+                 imageStatusMessage.textContent = 'Pixel Ratio must be at least 1.';
+                 convertButton.disabled = false;
+                 return;
+            }
+
+            processingCanvas.width = img.width;
+            processingCanvas.height = img.height;
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+
+            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+            const pixels = imageData.data;
+            const workingPixels = new Uint8ClampedArray(pixels);
+
+            for (let i = 0; i < workingPixels.length; i += 4) {
+                const r = workingPixels[i];
+                const g = workingPixels[i + 1];
+                const b = workingPixels[i + 2];
+                const alpha = workingPixels[i + 3];
+
+                const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+                let bwValue;
+
+                if (alpha < 128) {
+                    bwValue = 255;
+                } else {
+                   bwValue = luminance < threshold ? 0 : 255;
+                }
+
+                workingPixels[i] = bwValue;
+                workingPixels[i + 1] = bwValue;
+                workingPixels[i + 2] = bwValue;
+                workingPixels[i + 3] = 255;
+            }
+
+            const commands = [];
+            const outputWidth = Math.floor(img.width / pixelRatio);
+            const outputHeight = Math.floor(img.height / pixelRatio);
+
+            if (outputWidth === 0 || outputHeight === 0) {
+                imageStatusMessage.textContent = 'Image is too small for the chosen Pixel Ratio.';
+                convertButton.disabled = false;
+                return;
+            }
+
+            ctx.clearRect(0, 0, img.width, img.height);
+            processingCanvas.width = outputWidth;
+            processingCanvas.height = outputHeight;
+
+
+            for (let y = 0; y < outputHeight; y++) {
+                for (let x = 0; x < outputWidth; x++) {
+                     const startX = x * pixelRatio;
+                     const startY = y * pixelRatio;
+
+                     let representativeR = 0, representativeG = 0, representativeB = 0;
+                     let colorSourceCount = 0;
+
+                     for (let py = 0; py < pixelRatio; py++) {
+                        for (let px = 0; px < pixelRatio; px++) {
+                            const currentPixelX = startX + px;
+                            const currentPixelY = startY + py;
+                             if (currentPixelX < img.width && currentPixelY < img.height) {
+                                const index = (currentPixelY * img.width + currentPixelX) * 4;
+                                 representativeR += workingPixels[index];
+                                 representativeG += workingPixels[index + 1];
+                                 representativeB += workingPixels[index + 2];
+                                 colorSourceCount++;
+                             }
+                         }
+                     }
+
+                     let finalColor = null;
+                     let matchedBlock = null;
+
+                     if(colorSourceCount > 0) {
+                         representativeR = Math.round(representativeR / colorSourceCount);
+                         representativeG = Math.round(representativeG / colorSourceCount);
+                         representativeB = Math.round(representativeB / colorSourceCount);
+                         finalColor = [representativeR, representativeG, representativeB];
+
+                         matchedBlock = findClosestColor(finalColor, minecraftPalette);
+
+                         if (ditheringEnabled) {
+                             let errorR = finalColor[0] - matchedBlock.color[0];
+                             let errorG = finalColor[1] - matchedBlock.color[1];
+                             let errorB = finalColor[2] - matchedBlock.color[2];
+
+                             diffuseError(workingPixels, img.width, img.height, startX + 1, startY, errorR, errorG, errorB, 7 / 16);
+                             diffuseError(workingPixels, img.width, img.height, startX - 1, startY + 1, errorR, errorG, errorB, 3 / 16);
+                             diffuseError(workingPixels, img.width, img.height, startX, startY + 1, errorR, errorG, errorB, 5 / 16);
+                             diffuseError(workingPixels, img.width, img.height, startX + 1, startY + 1, errorR, errorG, errorB, 1 / 16);
+                         }
+
+                        commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
+
+                         ctx.fillStyle = `rgb(${matchedBlock.color[0]}, ${matchedBlock.color[1]}, ${matchedBlock.color[2]})`;
+                         ctx.fillRect(x, y, 1, 1);
+
+                     } else {
+                         matchedBlock = findClosestColor([255, 255, 255], minecraftPalette);
+                         commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
+                         ctx.fillStyle = `rgb(${matchedBlock.color[0]}, ${matchedBlock.color[1]}, ${matchedBlock.color[2]})`;
+                         ctx.fillRect(x, y, 1, 1);
+                     }
+                }
+            }
+
+            outputCommands.value = commands.join('\n');
+            imageStatusMessage.textContent = `Converted image to ${commands.length} blocks (${outputWidth}x${outputHeight}).`;
+            convertButton.disabled = false;
+            copyButton.disabled = commands.length === 0;
+            downloadButton.disabled = commands.length === 0;
+        }
+
+        copyButton.addEventListener('click', function() {
+            outputCommands.select();
+            outputCommands.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(outputCommands.value).then(() => {
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 1500);
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                 imageStatusMessage.textContent = 'Error copying commands.';
+            });
+        });
+
+        downloadButton.addEventListener('click', function() {
+             const textToSave = outputCommands.value;
+             if (!textToSave) {
+                 imageStatusMessage.textContent = 'No commands to download.';
+                 return;
+             }
+             // Using the shared download function
+             download('pixel_art.mcfunction', textToSave);
+             imageStatusMessage.textContent = 'Downloaded pixel_art.mcfunction';
+         });
+
+
+        // --- MCFunction to Nifty Building Tool NBT Converter Script ---
+        // Using the provided code and linking to its specific elements
+
+        const nbtStatusMessage = document.getElementById('nbtStatusMessage'); // Get reference to the new status element
+        const nbtFileInput = document.getElementById('input-file'); // Get ref to the input file element
+        const nbtTitleInput = document.getElementById('nbt-title');
+        const commandsPerNpcInput = document.getElementById('commands-per-npc');
+
+
+        // Entry point for choosing a file (MCFunction Tool) - event listener on its specific input
+        nbtFileInput.addEventListener('change', getFile);
+
+        function getFile(event) {
+            const input = event.target;
+            if ('files' in input && input.files.length > 0) {
+                 nbtStatusMessage.textContent = 'Reading file...';
+                 processFile(input.files[0]);
+            } else {
+                 nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.';
+            }
+            input.value = ''; // Clear file input after selection
+        }
+
+        // Meat-and-potatoes logic (MCFunction Tool)
+        function processFile(file) {
+             nbtStatusMessage.textContent = 'Processing commands...';
+            readFileContent(file).then(content => {
+                const commands = getUsefulCommands(content);
+
+                if (commands.length === 0) {
+                     nbtStatusMessage.textContent = 'No setblock, fill, or summon commands found in the file.'; // More specific message
+                     return;
+                }
+
+                let commands_per_npc = parseInt(commandsPerNpcInput.value); // Use element ref
+                let nbt_name = nbtTitleInput.value.trim(); // Use element ref
+                let file_name;
+                if (nbt_name === "") {
+                    file_name = "NiftyBuildingTool_Output.txt";
+                    nbt_name = "Unnamed Build"
+                } else {
+                    file_name = "NiftyBuildingTool_" + nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "") + ".txt";
+                     nbt_name = nbt_name.replace(/"/g, "").replace(/\\/g, ""); // Clean title for NBT string content
+                }
+                if (isNaN(commands_per_npc) || commands_per_npc <= 0) {
+                    commands_per_npc = 346;
+                     commandsPerNpcInput.value = 346; // Update the input field too
+                }
+
+                let curSec = 0;
+                let NBTdata = getBlockOpener(nbt_name);
+                let NPCCount = Math.ceil(commands.length / commands_per_npc);
+
+                 nbtStatusMessage.textContent = `Generating NBT for ${commands.length} commands across ${NPCCount} NPCs...`;
+
+                for (var i = 0; i < commands.length; i += commands_per_npc) {
+                    curSec++;
+                    let NPCCommandList = commands.slice(i, i + commands_per_npc);
+                    let nextNPC = (curSec === NPCCount ? 1 : curSec + 1);
+
+                    const cleanNbtNameForTag = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, ""); // Clean for tag/tickingarea name
+                    NPCCommandList.unshift(`/tickingarea add circle ~ ~ ~ 4 NIFTYBUILDINGTOOL_${cleanNbtNameForTag}`);
+                    NPCCommandList.push(`/tickingarea remove NIFTYBUILDINGTOOL_${cleanNbtNameForTag}`);
+                    if (NPCCount > 1) {
+                         NPCCommandList.push(`/dialogue open @e[tag="${cleanNbtNameForTag}${nextNPC}",type=NPC,c=1] @initiator`);
+                    }
+                    NPCCommandList.push(`/kill @s`);
+
+                    NBTdata += getNPCOpener(curSec, nbt_name);
+                    NBTdata += NPCCommandList.map(x => commandToNBT(x.trim())).join(",");
+                    NBTdata += getNPCCloser();
+
+                    if (curSec < NPCCount) {
+                      NBTdata += ",";
+                    }
+                }
+                NBTdata += getBlockCloser();
+
+                 nbtStatusMessage.textContent = 'Download starting...';
+                download(file_name, NBTdata); // Call the shared download function
+
+                 nbtStatusMessage.textContent = `Successfully generated and downloaded ${file_name}.`;
+            }).catch(error => {
+                 console.error("Error processing file:", error);
+                 nbtStatusMessage.textContent = 'Error processing file. Check console (F12) for details.'; // Suggest checking console
+             });
+        }
+
+        // Read a whole file
+        function readFileContent(file) {
+            const reader = new FileReader();
+            return new Promise((resolve, reject) => {
+                reader.onload = event => resolve(event.target.result);
+                reader.onerror = error => reject(error);
+                reader.readAsText(file);
+            })
+        }
+
+        // Find a line that begins with setblock, fill, or summon and ignore whitespace and /
+        function getUsefulCommands(content) {
+            return content.split('\n').map(x => x.replace(/^\s*\//, "").trim()).filter(x => {
+                return x.length > 0 && (x.startsWith("setblock") || x.startsWith("fill") || x.startsWith("summon"));
+            });
+        }
+
+        // NBT Helper Functions (from provided code)
+        function getBlockOpener(nbt_name) {
+            const escapedNbtNameForLore = nbt_name.replace(/"/g, '\\"').replace(/\n/g, '\\n'); // Escape for Lore display string
+            return `{Block:{name:"minecraft:moving_block",states:{},version:17959425},Count:1b,Damage:0s,Name:"minecraft:moving_block",WasPickedUp:0b,tag:{display:{Lore:["Created using the Nifty Building Tool\\nBy Brutus314 and Clawsky123.\\n\\nÂ§gÂ§l${escapedNbtNameForLore}"],Name:"Â§gÂ§l${escapedNbtNameForLore}"},movingBlock:{name:"minecraft:sea_lantern",states:{},version:17879555},movingEntity:{Occupants:[`;
+        }
+
+        function getBlockCloser() {
+            return '],id:"Beehive"}}}';
+        }
+
+        function getNPCOpener(section, nbt_name) {
+             const cleanedNbtNameForTag = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, ""); // Clean for tag/tickingarea name
+             const escapedNbtNameForJSON = nbt_name.replace(/"/g, '\\"').replace(/\\/g, '\\\\'); // Escape for JSON string content
+
+            return `{ActorIdentifier:"minecraft:npc<>",SaveData:{Persistent:1b,Pos:[],Variant:18,definitions:["+minecraft:npc"],RawtextName:"${escapedNbtNameForJSON}",CustomName:"${escapedNbtNameForJSON}",CustomNameVisible:1b,Tags:["${cleanedNbtNameForTag}${section}","NiftyBuildingTool"],Actions:"[{\\"button_name\\" : \\"Build Section ${section}\\",\\"data\\" : [`;
+        }
+
+        function getNPCCloser() {
+            return `],\\"mode\\" : 0,\\"text\\" : \\"\\",\\"type\\" : 1}]",InterativeText:"Â§4Â§lCreated using the Nifty Building Tool by Brutus314 and Clawsky123."},TicksLeftToStay:0}`;
+        }
+
+        function commandToNBT(command) {
+            const jsonCommand = JSON.stringify({
+                cmd_line : command,
+                cmd_ver : 12
+            });
+            return jsonCommand.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`);
+        }
+
+        // Shared download function
+        function download(filename, text) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            URL.revokeObjectURL(element.href);
+        }
+
+    </script>
+
+</body>
+</html>
