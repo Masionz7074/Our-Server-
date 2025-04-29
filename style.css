@@ -1,0 +1,561 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Galaxy Theme Font */
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    color: #e0e0e0; /* Light gray text */
+    /* Galaxy Background */
+    background: linear-gradient(135deg, #0a0a2a 0%, #2b0a3a 50%, #0a0a2a 100%); /* Dark blue/purple gradient */
+    background-attachment: fixed;
+    /* Optional: Add a starry effect */
+    background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
+                      radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
+                      radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 50px 50px, 150px 150px, 300px 300px;
+    background-position: 0 0, 20px 20px, 50px 50px;
+
+    display: flex;
+    flex-direction: column; /* Stack sections vertically */
+    align-items: center;
+    min-height: 100vh;
+    padding-bottom: 40px;
+}
+
+.tab-container {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 40px; /* More space at the top */
+    background-color: rgba(30, 10, 40, 0.8); /* Semi-transparent dark background matching earlier container */
+    border-radius: 15px; /* Rounder corners */
+    box-shadow: 0 0 30px rgba(150, 50, 250, 0.5); /* Purple glow effect */
+    overflow: hidden;
+}
+
+.tabs {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid rgba(150, 50, 250, 0.3); /* Subtle purple border */
+    background-color: rgba(40, 15, 50, 0.9); /* Darker purple background for the tab bar */
+    border-top-left-radius: 15px; /* Match container radius */
+    border-top-right-radius: 15px; /* Match container radius */
+}
+
+.tab-button {
+    padding: 15px 20px;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    color: #a0a0a0; /* Subtle color for inactive tabs */
+    font-size: 1.1em;
+    transition: color 0.3s ease, background-color 0.3s ease;
+     text-align: center;
+     flex-grow: 1;
+    outline: none; /* Remove outline on click */
+}
+ .tab-button:first-child {
+     border-top-left-radius: 15px;
+ }
+  .tab-button:last-child {
+     border-top-right-radius: 15px;
+ }
+
+
+.tab-button:hover:not(.active) {
+    color: #ffffff; /* White on hover */
+}
+
+.tab-button.active {
+    color: #9affff; /* Vibrant cyan for active tab */
+    border-bottom: 2px solid #9affff; /* Vibrant underline */
+    font-weight: bold;
+     background-color: rgba(30, 10, 40, 0.9); /* Match container background */
+     cursor: default;
+}
+
+.tab-content {
+    padding: 30px; /* Generous padding inside the content area */
+}
+
+ /* Styles for the existing containers within tab content */
+ .tab-content .container {
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+    max-width: 100%;
+    margin-top: 0;
+    margin-bottom: 0;
+    /* Ensure inner elements fill the space */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+
+h1 {
+    text-align: center;
+    color: #9affff; /* Vibrant Cyan Title */
+    margin-bottom: 20px;
+    margin-top: 0;
+    text-shadow: 0 0 10px rgba(154, 255, 255, 0.6); /* Cyan glow */
+}
+ h2 {
+     color: #b088ff; /* Purple for section headers */
+     border-bottom: 1px solid #5a2a7a; /* Purple border */
+     padding-bottom: 8px;
+     margin-bottom: 15px;
+     margin-top: 20px;
+     text-align: center; /* Center section titles */
+     font-size: 1.3em;
+ }
+.tab-content h2:first-child {
+     margin-top: 0;
+ }
+
+
+p {
+     text-align: center;
+     margin-bottom: 20px;
+     color: #c0c0c0;
+}
+
+
+.input-section,
+.options-section,
+.output-section {
+    margin-bottom: 25px;
+    padding: 20px; /* Increased padding */
+    border: 1px solid #5a2a7a; /* Purple border */
+    border-radius: 8px; /* Rounder corners */
+    background-color: rgba(40, 15, 50, 0.5); /* Lighter semi-transparent background for sections */
+}
+
+
+input[type="file"] {
+    display: block;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+     padding: 8px; /* Added padding */
+     border: 1px solid #5a2a7a; /* Border */
+     border-radius: 4px; /* Border radius */
+     background-color: #1a0a2a; /* Dark background */
+     width: calc(100% - 18px); /* Adjust width for padding/border */
+}
+
+#imagePreview {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 15px auto 0; /* Center and add margin */
+    border: 2px solid #9affff; /* Cyan border for preview */
+    border-radius: 8px;
+     box-shadow: 0 0 10px rgba(154, 255, 255, 0.4); /* Cyan glow */
+}
+
+.option-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px; /* More space between options */
+    flex-wrap: wrap;
+}
+
+.option-group label {
+    margin-right: 15px;
+    min-width: 180px; /* More space for labels */
+    color: #e0e0e0;
+    font-weight: normal; /* Standard weight */
+}
+
+.option-group input[type="number"],
+.option-group input[type="range"],
+.option-group input[type="checkbox"],
+.option-group input[type="text"]
+{
+     margin-right: 5px;
+     vertical-align: middle; /* Align elements vertically */
+}
+ .option-group input[type="number"],
+ .option-group input[type="text"] {
+     padding: 8px; /* Increased padding */
+     border: 1px solid #5a2a7a; /* Purple border */
+     border-radius: 4px;
+     background-color: #1a0a2a; /* Dark background */
+     color: #ffffff;
+     font-size: 1em;
+     outline: none;
+     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+     width: 80px; /* Slightly wider number inputs */
+ }
+  .option-group input[type="text"] {
+      width: calc(100% - 210px); /* Adjust for increased label/input width and margins */
+      min-width: 100px;
+  }
+
+ .option-group input[type="number"]:focus,
+ input[type="text"]:focus {
+     border-color: #9affff; /* Cyan on focus */
+     box-shadow: 0 0 8px rgba(154, 255, 255, 0.4); /* Cyan glow on focus */
+ }
+
+ .option-group input[type="range"] {
+      flex-grow: 1;
+      height: 25px; /* Taller slider */
+      background: linear-gradient(to right, #5a2a7a, #9affff); /* Purple to Cyan gradient */
+      border-radius: 10px;
+      appearance: none; /* Hide default appearance */
+      outline: none;
+ }
+
+ /* Custom thumb style for range slider */
+ input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px; /* Larger thumb */
+    height: 20px; /* Larger thumb */
+    background: #ffffff; /* White thumb */
+    border-radius: 50%; /* Round thumb */
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    margin-top: -3px; /* Adjust to center vertically */
+ }
+ input[type="range"]::-moz-range-thumb {
+     width: 20px;
+     height: 20px;
+     background: #ffffff;
+     border-radius: 50%;
+     cursor: pointer;
+     box-shadow: 0 0 5px rgba(0,0,0,0.3);
+ }
+
+
+.option-group input[type="checkbox"] {
+    width: 18px; /* Larger checkbox */
+    height: 18px; /* Larger checkbox */
+    vertical-align: middle;
+}
+
+
+.button-group {
+    margin-top: 20px; /* Space above buttons */
+    margin-bottom: 0;
+    display: flex;
+    gap: 15px; /* Increased gap */
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+
+button {
+    display: inline-block;
+    padding: 12px 20px; /* More padding */
+    border: none;
+    border-radius: 6px; /* Slightly rounder */
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    font-weight: bold;
+    text-transform: uppercase; /* Uppercase text */
+    letter-spacing: 1px;
+     outline: none;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Primary button style (Convert) */
+button:not(#copyButton):not(#downloadButton):not(#downloadNBTButton) {
+     background: linear-gradient(45deg, #00bfff, #00ff88); /* Cyan to Green gradient */
+     color: #1a1a1a; /* Dark text */
+     box-shadow: 0 4px 15px rgba(0, 191, 255, 0.4);
+}
+button:not(#copyButton):not(#downloadButton):not(#downloadNBTButton):hover {
+    background: linear-gradient(45deg, #00ff88, #00bfff); /* Reverse gradient */
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.6);
+}
+
+/* Secondary button style (Copy) */
+#copyButton {
+    background-color: #4a4a4a; /* Dark gray */
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+#copyButton:hover {
+     background-color: #6a6a6a; /* Lighter gray */
+     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Download button style (Orange/Gold) */
+ #downloadButton, #downloadNBTButton {
+     background: linear-gradient(45deg, #ffaa00, #ff6600); /* Orange/Gold gradient */
+     color: #1a1a1a; /* Dark text */
+     box-shadow: 0 4px 15px rgba(255, 170, 0, 0.4);
+ }
+  #downloadButton:hover, #downloadNBTButton:hover {
+      background: linear-gradient(45deg, #ff6600, #ffaa00); /* Reverse gradient */
+      box-shadow: 0 4px 15px rgba(255, 102, 0, 0.6);
+  }
+
+
+button:disabled {
+    background-color: #555555;
+    color: #aaaaaa;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+
+#outputCommands {
+    width: 100%;
+    height: 300px;
+    padding: 15px; /* Increased padding */
+    border: 1px solid #5a2a7a; /* Purple border */
+    border-radius: 8px;
+    background-color: #1a0a2a; /* Darker background */
+    color: #00ff00; /* Bright green text */
+    font-family: 'Courier New', Courier, monospace;
+    resize: vertical;
+    box-sizing: border-box;
+     margin-bottom: 20px; /* Space below textarea */
+     outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+#outputCommands:focus {
+    border-color: #9affff; /* Cyan on focus */
+    box-shadow: 0 0 8px rgba(154, 255, 255, 0.4); /* Cyan glow on focus */
+}
+
+
+.status-message {
+    margin-top: 15px;
+    margin-bottom: 15px; /* Added bottom margin */
+    text-align: center;
+    color: #ffffa0; /* Light yellow for status */
+     min-height: 1.2em;
+     font-style: italic;
+}
+
+/* Hide the processing canvas */
+#processingCanvas {
+    display: none;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .tab-container {
+        margin-top: 20px;
+        border-radius: 8px; /* Smaller radius on smaller screens */
+    }
+
+    .tabs {
+        flex-direction: column; /* Stack tabs vertically on small screens */
+         border-bottom: none; /* Remove horizontal border */
+    }
+
+    .tab-button {
+         border-bottom: 1px solid rgba(150, 50, 250, 0.2); /* Add borders between stacked tabs */
+         border-top-left-radius: 0; /* Remove top radius for inner stacked tabs */
+         border-top-right-radius: 0; /* Remove top radius for inner stacked tabs */
+    }
+     .tab-button:first-child {
+         border-top-left-radius: 8px; /* Add radius back to the first tab */
+          border-top-right-radius: 8px;
+         border-bottom: 1px solid rgba(150, 50, 250, 0.2); /* Keep bottom border for first tab */
+     }
+      .tab-button:last-child {
+          border-bottom: none; /* Remove border from the last tab */
+      }
+
+
+    .tab-button.active {
+         border-bottom: none; /* Remove border below active stacked tab */
+          position: relative; /* Needed for ::after pseudo-element */
+          z-index: 1; /* Ensure it's above content border */
+    }
+    /* Optional: Add a small indicator to the side for the active stacked tab */
+    .tab-button.active::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 5px; /* Width of the indicator */
+        height: 80%; /* Height of the indicator */
+        background-color: #9affff; /* Indicator color */
+         border-top-left-radius: 3px;
+         border-bottom-left-radius: 3px;
+    }
+
+
+    .tab-content {
+        padding: 15px; /* Less padding on smaller screens */
+    }
+
+     h1 {
+         font-size: 1.8em; /* Slightly smaller h1 */
+     }
+      h2 {
+         font-size: 1.1em; /* Slightly smaller h2 */
+      }
+
+
+    .input-section,
+    .options-section,
+    .output-section {
+        padding: 15px; /* Less padding for sections */
+    }
+
+    .option-group {
+        flex-direction: column; /* Stack options vertically */
+        align-items: flex-start; /* Align stacked options to the left */
+    }
+
+    .option-group label {
+        margin-right: 0;
+        margin-bottom: 5px; /* Space below label */
+        min-width: auto; /* Remove min-width constraint */
+    }
+
+    .option-group input[type="number"],
+    .option-group input[type="text"] {
+         width: 100%; /* Full width inputs when stacked */
+         box-sizing: border-box; /* Include padding/border in width */
+         margin-right: 0;
+    }
+     .option-group input[type="text"] {
+          width: 100%;
+     }
+     .option-group input[type="range"] {
+         width: 100%; /* Full width slider */
+         margin-right: 0;
+     }
+
+     .option-group input[type="checkbox"] {
+         margin-bottom: 5px; /* Add space below checkbox */
+     }
+      .option-group input[type="checkbox"] + span { /* Style text next to checkbox */
+         display: block; /* Make the span text go to the next line */
+          margin-top: -5px; /* Adjust spacing */
+          margin-left: 23px; /* Indent text to align with label text */
+      }
+
+
+    .button-group {
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 10px; /* Less space between stacked buttons */
+    }
+     button {
+         width: 100%; /* Full width stacked buttons */
+     }
+
+}
+    </style>
+</head>
+<body>
+    <div class="tab-container">
+        <div class="tabs">
+            <button class="tab-button" onclick="openTab('qrTool')">QR Code to MCFunction</button>
+            <button class="tab-button" onclick="openTab('nbtTool')">MCFunction to Nifty Building Tool NBT</button>
+        </div>
+
+        <!-- QR Code to MCFunction Tab Content -->
+        <div id="qrTool" class="tab-content">
+             <div class="container"> <!-- Keep container for inner padding/structure -->
+                <h1>QR Code Image to Pixel Art</h1>
+                 <p>Converts an image (especially QR codes) into black and white pixel art commands using Black Concrete and White Wool.</p>
+
+                <div class="input-section">
+                    <h2>1. Upload Image</h2>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <img id="imagePreview" src="#" alt="Image Preview" style="display: none;">
+                    <canvas id="processingCanvas"></canvas> <!-- Keep canvas here, display is handled by CSS -->
+                </div>
+
+                <div class="options-section">
+                    <h2>2. Pixel Art Options</h2>
+                     <div class="option-group">
+                        <label for="pixelRatio">Pixels per Block:</label>
+                        <input type="number" id="pixelRatio" value="4" min="1">
+                         <span>(Higher value = smaller output art)</span>
+                    </div>
+                    <div class="option-group">
+                        <label for="threshold">Black/White Threshold:</label>
+                        <input type="range" id="threshold" value="128" min="0" max="255">
+                         <span id="thresholdValue">128</span>
+                    </div>
+                     <div class="option-group">
+                        <label for="baseHeight">Base Height (Y):</label>
+                        <input type="number" id="baseHeight" value="64" min="-64">
+                    </div>
+                     <div class="option-group">
+                        <label for="zOffset">Z Offset:</label>
+                        <input type="number" id="zOffset" value="0">
+                    </div>
+                     <div class="option-group">
+                        <label for="ditheringEnabled">Enable Dithering:</label>
+                        <input type="checkbox" id="ditheringEnabled" checked>
+                        <span>(Recommended for smoother B&W)</span>
+                    </div>
+                </div>
+
+                <div class="output-section">
+                    <h2>3. Generated Commands</h2>
+                    <button id="convertButton" disabled>Convert Image</button>
+                    <div id="imageStatusMessage" class="status-message">Select an image to begin.</div>
+
+                    <textarea id="outputCommands" readonly placeholder="Generated /setblock commands will appear here..."></textarea>
+
+                    <div class="button-group">
+                         <button id="copyButton" disabled>Copy Commands</button>
+                         <button id="downloadButton" disabled>Download .mcfunction</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MCFunction to NBT Converter Tab Content -->
+        <div id="nbtTool" class="tab-content" style="display:none;"> <!-- Initially hidden -->
+            <div class="container"> <!-- Keep container for inner padding/structure -->
+                 <h1>MCFunction to Nifty Building Tool NBT</h1>
+                 <p>Upload an .mcfunction file (e.g., generated by the tool above) to convert it into NBT format for the Nifty Building Tool NPCs.</p>
+
+                 <div class="input-section">
+                     <h2>1. Upload .mcfunction File</h2>
+                     <input type="file" id="input-file" accept=".mcfunction">
+                 </div>
+
+                 <div class="options-section">
+                     <h2>2. NBT Options</h2>
+                     <div class="option-group">
+                         <label for="nbt-title">Build Title:</label>
+                         <input type="text" id="nbt-title" value="MyPixelArt">
+                         <span>(Used for NPC tags and NBT file name)</span>
+                     </div>
+                     <div class="option-group">
+                         <label for="commands-per-npc">Commands per NPC:</label>
+                         <input type="number" id="commands-per-npc" value="346" min="1">
+                         <span>(Limit commands per NPC dialogue)</span>
+                     </div>
+                 </div>
+
+                 <div class="output-section">
+                     <h2>3. Convert & Download</h2>
+                     <div id="nbtStatusMessage" class="status-message">Select an .mcfunction file to convert.</div>
+                     <!-- Download is automatic on success, no separate button -->
+                 </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="script.js"></script>
+
+</body>
+</html>
