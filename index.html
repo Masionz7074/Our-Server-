@@ -36,8 +36,6 @@
 
     <!-- Main Content Area -->
     <div id="mainContent" class="main-content">
-         <!-- The existing tab-container is no longer needed as a structural wrapper,
-              but we can keep its inner 'container' style class if useful -->
          <div class="container">
 
              <!-- Home Page Content -->
@@ -174,20 +172,19 @@
              <!-- Settings Page Content -->
              <div id="settingsTool" class="content-section" style="display:none;">
                  <h1>Settings</h1>
-                 <p>Settings will go here...</p>
                   <div class="section">
                      <h2>Audio Settings</h2>
                      <div class="option-group">
                          <label for="musicVolume">Music Volume:</label>
-                         <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="1">
-                         <span id="musicVolumeValue">100%</span>
+                         <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.5">
+                         <span id="musicVolumeValue">50%</span>
                      </div>
                      <div class="option-group">
                          <label for="sfxVolume">Click Sound Volume:</label>
                          <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="1">
                          <span id="sfxVolumeValue">100%</span>
                      </div>
-                     <button id="toggleMusicBtn">Pause Music</button>
+                     <button id="toggleMusicBtn">Play Music</button>
                  </div>
              </div>
 
@@ -195,12 +192,9 @@
     </div> <!-- End #mainContent -->
 
 
-    <!-- Audio element for click sound -->
-    <!-- You will need to provide a file named 'button_click.mp3' in a 'sounds' folder -->
+    <!-- Audio elements -->
+    <!-- You will need to provide the .mp3 files in a 'sounds' folder -->
     <audio id="clickSound" src="sounds/button_click.mp3" preload="auto"></audio>
-
-    <!-- Audio element for background music -->
-    <!-- You will need to provide a file named 'background.mp3' in a 'sounds' folder -->
     <audio id="backgroundMusic" src="sounds/background.mp3" loop preload="auto"></audio>
 
 
