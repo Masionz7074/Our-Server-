@@ -1,4 +1,3 @@
-
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -58,6 +57,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const sfxVolumeValueSpan = document.getElementById('sfxVolumeValue'); // Span to display SFX volume percentage
     const toggleMusicBtn = document.getElementById('toggleMusicBtn'); // Button to toggle music playback
 
+    // Log element references after getting them
+    console.log("DOM fully loaded. Element references:");
+    console.log("  hamburgerBtn:", hamburgerBtn);
+    console.log("  sidebar:", sidebar);
+    console.log("  sidebarLinks:", sidebarLinks);
+    console.log("  mainContent:", mainContent);
+    console.log("  contentSections:", contentSections);
+    console.log("--- Function Pack Creator ---");
+    console.log("  generateBtn:", generateBtn);
+    console.log("  packNameInput:", packNameInput);
+    console.log("  packDescriptionInput:", packDescriptionInput);
+    console.log("  packIconInput:", packIconInput);
+    console.log("  presetListDiv:", presetListDiv);
+    console.log("  selectedPresetsDiv:", selectedPresetsDiv);
+    console.log("  selectedPresetsListUl:", selectedPresetsListUl);
+    console.log("  packStatusDiv:", packStatusDiv);
+    console.log("--- QR Code Tool ---");
+    console.log("  imageInput:", imageInput);
+    console.log("  imagePreview:", imagePreview);
+    console.log("  processingCanvas:", processingCanvas);
+    console.log("  convertButton:", convertButton);
+    console.log("  outputCommands:", outputCommands);
+    console.log("  copyButton:", copyButton);
+    console.log("  downloadButton:", downloadButton);
+    console.log("  imageStatusMessage:", imageStatusMessage);
+    console.log("  pixelRatioInput:", pixelRatioInput);
+    console.log("  baseHeightInput:", baseHeightInput);
+    console.log("  zOffsetInput:", zOffsetInput);
+    console.log("  ditheringEnabledInput:", ditheringEnabledInput);
+    console.log("  thresholdInput:", thresholdInput);
+    console.log("  thresholdValueSpan:", thresholdValueSpan);
+    console.log("--- NBT Tool ---");
+    console.log("  nbtStatusMessage:", nbtStatusMessage);
+    console.log("  nbtFileInput:", nbtFileInput);
+    console.log("  nbtTitleInput:", nbtTitleInput);
+    console.log("  commandsPerNpcInput:", commandsPerNpcInput);
+    console.log("--- Audio ---");
+    console.log("  clickSound:", clickSound);
+    console.log("  backgroundMusic:", backgroundMusic);
+    console.log("--- Settings ---");
+    console.log("  musicVolumeInput:", musicVolumeInput);
+    console.log("  musicVolumeValueSpan:", musicVolumeValueSpan);
+    console.log("  sfxVolumeInput:", sfxVolumeInput);
+    console.log("  sfxVolumeValueSpan:", sfxVolumeValueSpan);
+    console.log("  toggleMusicBtn:", toggleMusicBtn);
+
 
     // --- Set Initial Audio Volumes and State (Read from localStorage) ---
     // Use unique keys for each setting in localStorage
@@ -95,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sidebar) { // Check if sidebar element exists
             sidebar.classList.toggle('open'); // Toggle the 'open' class
             document.body.classList.toggle('sidebar-open'); // Toggle class on body for CSS layout shift
-        }
+        } else { console.warn("Sidebar element not found, cannot toggle sidebar."); }
     }
 
     // Function to show a specific content section and hide others
@@ -127,13 +172,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Perform specific setup needed when a particular section is made visible ---
             // This ensures elements are initialized *after* they are displayed and referenced
+            console.log(`Showing section: ${sectionId}`);
             if (sectionId === 'functionPackTool') {
                 if (presetListDiv && selectedPresetsListUl) {
+                    console.log("Rendering Function Pack Creator presets.");
                     renderPresetList(); // Re-render available presets
                     renderSelectedPresetsList(); // Re-render selected presets (also calls renderPresetList)
-                } else { console.warn("Function Pack Creator preset elements not found."); }
+                } else { console.warn("Function Pack Creator preset elements not found. Presets may not render."); }
             } else if (sectionId === 'qrTool') {
                 if (thresholdInput && thresholdValueSpan) {
+                    console.log("Setting up QR Tool threshold slider.");
                     // Function to update the displayed threshold value and the range slider track fill CSS variable
                     const updateThresholdDisplay = () => {
                         thresholdValueSpan.textContent = thresholdInput.value; // Update the displayed value
@@ -145,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     thresholdInput.addEventListener('input', updateThresholdDisplay);
                     updateThresholdDisplay(); // Update display immediately when section is shown
 
-                } else { console.warn("QR Tool threshold elements not found."); }
+                } else { console.warn("QR Tool threshold elements not found. Slider may not work."); }
                  // Also reset image preview and status when entering the QR tool section for a clean state
                  if (imagePreview) imagePreview.style.display = 'none'; // Hide image preview
                  if (convertButton) convertButton.disabled = true; // Disable convert button
@@ -158,8 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             } else if (sectionId === 'settingsTool') {
-                 // Initialize settings UI and attach listeners *when* settings section is shown
+                 console.log("Setting up Settings section.");
                  if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
+                     console.log("Setting up music volume slider.");
                      // Ensure the slider reflects the current audio volume loaded from localStorage
                      musicVolumeInput.value = backgroundMusic.volume; // Set slider position
                      musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update displayed percentage
@@ -169,10 +218,11 @@ document.addEventListener('DOMContentLoaded', () => {
                  } else if (!backgroundMusic && musicVolumeInput) {
                      console.warn("Background music element missing, settings music slider might not work.");
                      musicVolumeInput.disabled = true; // Disable slider if audio missing
-                 } else { console.warn("Settings music volume elements not found."); }
+                 } else { console.warn("Settings music volume elements or audio not found."); }
 
 
                  if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
+                      console.log("Setting up SFX volume slider.");
                      // Ensure the slider reflects the current audio volume loaded from localStorage
                      sfxVolumeInput.value = clickSound.volume; // Set slider position
                      sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update displayed percentage
@@ -184,18 +234,19 @@ document.addEventListener('DOMContentLoaded', () => {
                  } else if (!clickSound && sfxVolumeInput) {
                      console.warn("Click sound element missing, settings SFX slider might not work.");
                      sfxVolumeInput.disabled = true; // Disable slider if audio missing
-                 } else { console.warn("Settings SFX volume elements not found."); }
+                 } else { console.warn("Settings SFX volume elements or audio not found."); }
 
 
                   // Update music toggle button text and attach listener, removing potential previous ones
                  if (toggleMusicBtn && backgroundMusic) {
+                     console.log("Setting up music toggle button.");
                      toggleMusicBtn.textContent = backgroundMusic.paused ? 'Play Music' : 'Pause Music';
                      toggleMusicBtn.removeEventListener('click', toggleMusicPlayback);
                      toggleMusicBtn.addEventListener('click', toggleMusicPlayback);
                  } else if (!backgroundMusic && toggleMusicBtn) {
                      console.warn("Background music element missing, music toggle button might not work.");
                      toggleMusicBtn.disabled = true; // Disable toggle if music missing
-                 } else { console.warn("Settings music toggle button not found."); }
+                 } else { console.warn("Settings music toggle button or audio not found."); }
 
             }
             // Add checks for other sections here if they need specific setup on show
@@ -265,8 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Playback started successfully
                     console.log("Background music started.");
                     // Playback succeeded, remove the initial global listeners that trigger this function
-                    document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
-                    document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+                    // These specific handlers are now removed inside the firstInteractionHandler
+                    // document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
+                    // document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+
                     // Update settings button text if settings section is currently shown
                     if (toggleMusicBtn) toggleMusicBtn.textContent = 'Pause Music';
 
@@ -281,8 +334,10 @@ document.addEventListener('DOMContentLoaded', () => {
                  // Fallback for older browsers that don't return a Promise from play()
                  // We assume it played and remove listeners.
                  console.log("Attempted background music play (no promise returned).");
-                 document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
-                 document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+                 // These specific handlers are now removed inside the firstInteractionHandler
+                 // document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
+                 // document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+
                  // Update settings button text if settings section is currently shown
                  if (toggleMusicBtn) toggleMusicBtn.textContent = 'Pause Music';
             }
@@ -373,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 presetListDiv.appendChild(li); // Add to the list of available presets
             }
         });
+        console.log(`Rendered available presets: ${allPresets.length - selectedPresetIds.size} shown.`);
     }
 
     function renderSelectedPresetsList() {
@@ -389,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  selectedPresetsListUl.appendChild(li); // Add to the list of selected presets
             }
          });
+         console.log(`Rendered selected presets: ${selectedPresetIds.size} selected.`);
          renderPresetList(); // Re-render the available presets list to update based on selections
     }
 
@@ -400,6 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const presetId = button.dataset.presetId; // Get preset ID from data attribute
         const action = button.dataset.action; // Get action ('add' or 'remove') from data attribute
+
+        console.log(`Preset button clicked: ID=${presetId}, Action=${action}`);
 
         if (action === 'add') {
             selectedPresetIds.add(presetId); // Add ID to the set
@@ -441,12 +500,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         generateBtn.disabled = true; // Disable button while generating to prevent multiple clicks
         if(packStatusDiv) packStatusDiv.textContent = 'Generating pack...'; // Update status message
+        console.log("Starting pack generation...");
 
         // Get user input values, provide defaults if empty
         const packName = packNameInput.value.trim() || 'My Function Pack'; // Default name
         const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool'; // Default description
         const packIconFile = packIconInput.files[0]; // Get the uploaded file (if any)
         const packNamespace = sanitizeNamespace(packName) || 'my_pack'; // Sanitize name for namespace, default if empty or results in empty string
+        console.log(`Pack Name: "${packName}", Namespace: "${packNamespace}"`);
 
 
         // --- Assemble All File Contents Directly ---
@@ -471,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             ]
         }, null, 4); // Use 4 spaces for indentation in JSON
+        console.log("Generated manifest.json");
 
         // tick.json content - tells the game which function to run every tick
         const tickJsonContent = JSON.stringify({
@@ -478,8 +540,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 `${packNamespace}:main` // Reference the 'main' function inside the pack's namespace folder
              ]
         }, null, 4); // Use 4 spaces for indentation
+         console.log("Generated tick.json");
 
-        // main.mcfunction, objectives.mcfunction, setup.mcfunction, and additional preset files content
+
+        // Initialize content builders for core function files (main, objectives, setup) and additional preset files
         const mainCommands = [
             `# Function pack: ${packName}`, // Header comments
             `# Namespace: ${packNamespace}`,
@@ -495,12 +559,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const requiredObjectives = new Map(); // Use Map to store unique objectives needed by presets { name: {obj_data} }
         const requiredSetupCommands = new Set(); // Use Set to store unique setup commands needed by presets { command_string }
-        const additionalFilesMap = new Map(); // Use a Map to store content for additional preset files { path_relative_to_functions_folder: content_string }
+        const additionalFilesMap = new Map(); // Use a Map to store content for additional preset files { path_relative_to_namespace_folder: content_string }
 
         // Iterate through selected presets and collect their required content
+        console.log(`Processing ${selectedPresetIds.size} selected presets...`);
         selectedPresetIds.forEach(presetId => {
             const preset = allPresets.find(p => p.id === presetId); // Find the preset object by ID
             if (preset) { // If the preset exists
+                console.log(`  Adding content for preset: ${preset.name}`);
                 // Add objectives from the preset to the Map, using objective name as key to ensure uniqueness
                 preset.objectives.forEach(obj => requiredObjectives.set(obj.name, obj));
 
@@ -516,13 +582,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Add additional files defined by the preset to the map, replacing namespace placeholder in content
                  preset.additional_files.forEach(file => {
-                    // Store additional files by their intended full path within the functions/[namespace] folder
+                    // Store additional files by their intended path *relative to the namespace folder*
                     // The filename in the preset definition should just be the file name (e.g., 'on_death_action.mcfunction')
-                     const fullPath = `${packNamespace}/${file.filename}`; // Construct the full path, e.g., 'my_pack/on_death_action.mcfunction'
-                      if (additionalFilesMap.has(fullPath)) {
-                         console.warn(`Duplicate additional file generated: ${fullPath}. Content is being overwritten.`);
+                     const relativePathInsideNamespace = file.filename; // e.g., 'on_death_action.mcfunction'
+                      if (additionalFilesMap.has(relativePathInsideNamespace)) {
+                         console.warn(`Duplicate additional file generated: ${relativePathInsideNamespace}. Content is being overwritten.`);
                       }
-                     additionalFilesMap.set(fullPath, file.content.replace(/<pack_namespace>/g, packNamespace)); // Store content, replacing placeholder
+                     additionalFilesMap.set(relativePathInsideNamespace, file.content.replace(/<pack_namespace>/g, packNamespace)); // Store content, replacing placeholder
+                     console.log(`    Added additional file: ${relativePathInsideNamespace}`);
                  });
             }
         });
@@ -530,6 +597,9 @@ document.addEventListener('DOMContentLoaded', () => {
          // Add the dummy 'objectives' objective needed for the Bedrock scoreboard check trick
          // This objective is implicitly required by the 'execute unless score @s "obj" objectives matches 0' check pattern.
          requiredObjectives.set('objectives', {name: 'objectives', type: 'dummy'});
+         console.log(`Collected ${requiredObjectives.size} unique objectives.`);
+         console.log(`Collected ${requiredSetupCommands.size} unique setup commands.`);
+         console.log(`Collected ${additionalFilesMap.size} additional preset files.`);
 
 
          // Construct objectives.mcfunction content from collected unique objectives
@@ -540,11 +610,12 @@ document.addEventListener('DOMContentLoaded', () => {
              // Sort objectives alphabetically by name for consistent output
              ...Array.from(requiredObjectives.keys()).sort().map(objName => {
                  const obj = requiredObjectives.get(objName); // Get objective data
-                 // Command to add objective only if it doesn't exist. Requires player context.
-                 // Quote objective names in the command for safety, in case they have spaces or special characters (though dummy/deathCount names usually don't).
+                 // Command to add objective only if it doesn't exist. Requires player context (@a).
+                 // Quote objective names in the command for safety, in case they have spaces or special characters.
                  return `execute as @a at @s unless score @s "${obj.name}" objectives matches 0 run scoreboard objectives add "${obj.name}" ${obj.type}`;
              })
          ];
+         console.log("Generated objectives.mcfunction content.");
 
          // Construct setup.mcfunction content from collected unique setup commands
          const setupCommands = [
@@ -553,15 +624,17 @@ document.addEventListener('DOMContentLoaded', () => {
               '', // Empty line
               ...Array.from(requiredSetupCommands).sort() // Sort setup commands alphabetically for consistent output
          ];
+         console.log("Generated setup.mcfunction content.");
 
          // Combine all function file contents into a single map for zipping
-         // The keys in this map will be the paths relative to the 'functions' folder in the zip
-         const allFunctionFiles = new Map([
-             [`${packNamespace}/main.mcfunction`, mainCommands.join('\n')], // Main function
-             [`${packNamespace}/objectives.mcfunction`, objectiveCommands.join('\n')], // Objectives function
-             [`${packNamespace}/setup.mcfunction`, setupCommands.join('\n')], // Setup function
-             ...additionalFilesMap // Spread the additional preset files into this map
+         // The keys in this map will be the paths relative to the 'functions/[namespace]' folder in the zip
+         const functionFilesInsideNamespace = new Map([
+             [`main.mcfunction`, mainCommands.join('\n')], // Main function
+             [`objectives.mcfunction`, objectiveCommands.join('\n')], // Objectives function
+             [`setup.mcfunction`, setupCommands.join('\n')], // Setup function
+             ...additionalFilesMap // Spread the additional preset files into this map (keys are already filenames)
          ]);
+         console.log(`Total function files inside namespace: ${functionFilesInsideNamespace.size}`);
 
 
         // --- Create Zip File using JSZip library ---
@@ -569,37 +642,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add manifest.json to the root of the zip file
         zip.file("manifest.json", manifestContent);
+        console.log("Added manifest.json to zip.");
 
         // Add pack icon if an image file was uploaded
         if (packIconFile) {
              try {
                  const iconData = await packIconFile.arrayBuffer(); // Read the file content as an ArrayBuffer asynchronously
                  zip.file("pack_icon.png", iconData); // Add the file content to the zip under the name pack_icon.png
+                 console.log("Added pack_icon.png to zip.");
              } catch (error) {
                  if(packStatusDiv) packStatusDiv.textContent = `Error reading pack icon: ${error}`; // Report error to user
                  console.error("Error reading pack icon:", error); // Log error to console
                  generateBtn.disabled = false; // Re-enable button
                  return; // Stop the generation process if icon reading fails
              }
-        }
+        } else { console.log("No pack icon uploaded."); }
+
 
         // Create the 'functions' folder inside the zip
         const functionsFolder = zip.folder("functions");
+        console.log("Created 'functions' folder in zip.");
 
         // Add tick.json directly inside the 'functions' folder
         functionsFolder.file("tick.json", tickJsonContent);
+        console.log("Added tick.json to zip.");
 
-        // Add all generated function files to the zip using their stored relative paths within the 'functions' folder
-        allFunctionFiles.forEach((content, relativePath) => {
-            // The keys in allFunctionFiles are already the paths relative to the 'functions' folder
-            // e.g., 'my_pack/main.mcfunction' or 'my_pack/on_death_action.mcfunction'
-            functionsFolder.file(relativePath, content); // Add the file content at the correct relative path within the functions folder
+
+        // Create the namespace folder inside the 'functions' folder
+        const namespaceFolder = functionsFolder.folder(packNamespace);
+        console.log(`Created namespace folder 'functions/${packNamespace}/' in zip.`);
+
+        // Add all generated function files to the namespace folder
+        functionFilesInsideNamespace.forEach((content, filename) => {
+            // The keys in functionFilesInsideNamespace are just the filenames (e.g., 'main.mcfunction')
+            namespaceFolder.file(filename, content); // Add the file content inside the namespace folder
+            // console.log(`  Added functions/${packNamespace}/${filename}`); // Debugging line
         });
+        console.log(`Added ${functionFilesInsideNamespace.size} files inside functions/${packNamespace}/`);
 
 
         // --- Generate the Zip File and Trigger Download ---
+        console.log("Generating zip file...");
         zip.generateAsync({ type: "blob" }) // Generate the zip file data as a Blob asynchronously
             .then(function(content) { // Promise resolves with the Blob content
+                console.log("Zip file generated successfully (Blob).");
                 // Use the shared download function with the generated Blob data
                 download(`${packName}.zip`, content); // Trigger download with the pack name
 
@@ -608,9 +694,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             })
             .catch(function(error) { // Catch any errors that occur during zip file generation
+                console.error("Error generating zip:", error); // Log error to console for debugging
                 if(packStatusDiv) packStatusDiv.textContent = `Error generating pack: ${error}`; // Report error to user
                 generateBtn.disabled = false; // Re-enable button
-                console.error("Error generating zip:", error); // Log error to console for debugging
             });
     }
 
@@ -662,6 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
      // Main Image Processing Function (used by QR tool) - Converts image to Minecraft blocks
     function processImage(img) {
+        console.log("Starting image processing.");
         // Check if all necessary elements and canvas context are available before starting processing
         if (!ctx || !processingCanvas || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton || !thresholdInput) {
              console.error("Missing required elements for image processing. Cannot proceed."); // Log error
@@ -676,6 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const zOffset = parseInt(zOffsetInput.value) || 0; // The Z offset for the pixel art (relative to command executor's Z)
         const ditheringEnabled = ditheringEnabledInput.checked; // Whether dithering is enabled (boolean)
         // The threshold value for black/white conversion is read inside the findClosestColor function
+        console.log(`Processing options: Pixels/Block=${pixelRatio}, BaseY=${baseHeight}, ZOffset=${zOffset}, Dithering=${ditheringEnabled}`);
 
         // Validate pixel ratio - must be at least 1
         if (pixelRatio < 1) {
@@ -702,6 +790,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Calculate the dimensions of the output pixel art grid in terms of Minecraft blocks
         const outputWidth = Math.floor(img.width / pixelRatio); // Number of blocks horizontally
         const outputHeight = Math.floor(img.height / pixelRatio); // Number of blocks vertically
+        console.log(`Original size: ${img.width}x${img.height}, Output size (blocks): ${outputWidth}x${outputHeight}`);
+
 
         // Check if calculated output dimensions are valid (must be at least 1x1)
         if (outputWidth === 0 || outputHeight === 0) {
@@ -781,6 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
         outputCommands.value = commands.join('\n'); // Join all commands with newlines
         // Update the status message below the convert button
         imageStatusMessage.textContent = `Converted image to ${commands.length} blocks (${outputWidth}x${outputHeight}).`; // Show command count and dimensions
+        console.log(`Generated ${commands.length} commands.`);
 
         // Re-enable the convert button
         convertButton.disabled = false;
@@ -859,6 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Main processing logic for MCFunction to NBT conversion (triggered by file input change event)
     function processNBTFile(file) {
+        console.log("Starting NBT conversion process.");
          // Check if necessary elements exist before proceeding
          if(!nbtStatusMessage || !nbtTitleInput || !commandsPerNpcInput) {
              console.error("Missing NBT tool elements. Cannot proceed."); // Log error
@@ -871,6 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
         readFileContent(file).then(content => {
             // Extract relevant building commands from the file content
             const commands = getUsefulCommands(content);
+            console.log(`Found ${commands.length} useful commands.`);
 
             // Check if any useful commands were found
             if (commands.length === 0) {
@@ -887,12 +980,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clean up nbt_name for use in the filename (allow alphanumeric, hyphen, underscore)
             const cleanNbtNameForFilename = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "") || "Output"; // Default filename part if name is empty/invalid
             file_name = `NiftyBuildingTool_${cleanNbtNameForFilename}.txt`; // Construct the final filename
+            console.log(`Build Title: "${nbt_name}", Commands per NPC: ${commands_per_npc}, Output Filename: "${file_name}"`);
 
 
             // Validate commands per NPC, update input field if defaulted (although the || default already handles it)
             if (isNaN(commands_per_npc) || commands_per_npc <= 0) {
                 commands_per_npc = 346; // Default limit
                  if (commandsPerNpcInput) commandsPerNpcInput.value = 346; // Update the input field visually if defaulted
+                 console.warn(`Invalid commands per NPC, defaulting to ${commands_per_npc}.`);
             }
 
             let curSec = 0; // Counter for NPC sections (starts at 1 for display)
@@ -901,8 +996,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calculate the total number of NPCs required based on the number of commands and commands_per_npc limit
             let NPCCount = Math.ceil(commands.length / commands_per_npc);
+            console.log(`Generating NBT for ${commands.length} commands across ${NPCCount} NPCs.`);
 
-            nbtStatusMessage.textContent = `Generating NBT for ${commands.length} commands across ${NPCCount} NPCs...`; // Update status
 
             // Loop through commands, splitting them into sections for each NPC
             for (var i = 0; i < commands.length; i += commands_per_npc) {
@@ -925,6 +1020,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // Add command to kill the current NPC after it finishes executing its commands
                 NPCCommandList.push(`/kill @s`); // Add kill command (targets the NPC itself)
+                console.log(`  Generated command list for NPC ${curSec} (${NPCCommandList.length} commands)`);
+
 
                 // Add the NBT structure string for the current NPC to the main NBT data string
                 NBTdata += getNPCOpener(curSec, nbt_name); // Add NPC opening part (includes section number and name)
@@ -938,12 +1035,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             NBTdata += getBlockCloser(); // Add the closing part of the main NBT structure
+            console.log("Finished generating NBT data string.");
+
 
             // Trigger the download of the generated NBT data
              nbtStatusMessage.textContent = 'Download starting...'; // Update status
             download(file_name, NBTdata); // Use the shared download function to download the .txt file
 
              nbtStatusMessage.textContent = `Successfully generated and downloaded ${file_name}.`; // Final success status message
+             console.log("NBT conversion successful, download triggered.");
+
         }).catch(error => {
              // Handle errors that occur during file reading or processing
              console.error("Error processing file:", error); // Log error to console
@@ -1049,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const presetsSection = document.querySelector('.presets.section');
     if(presetsSection) {
          presetsSection.addEventListener('click', handlePresetButtonClick); // Attach delegation listener to the section
-    } else { console.warn("Presets section not found."); }
+    } else { console.warn("Presets section (delegation parent) not found. Preset buttons will not work."); }
 
 
     // --- QR Code to MCFunction Tool Logic and Listeners ---
@@ -1189,6 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Page Load: Show Default Section ---
     // Show the Home section when the page finishes loading
+    console.log("Initializing page by showing home tool.");
      showSection('homeTool'); // Call showSection with the ID of the home section
 
 
