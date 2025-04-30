@@ -1,18 +1,9 @@
-
-
-
-
-
-
-/* Reset some default browser styles */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-/* Include Minecraft font (example) */
-/* You will need to provide these font files in a 'fonts' folder */
 @font-face {
     font-family: 'Minecraftia';
     src: url('fonts/Minecraftia.woff2') format('woff2'),
@@ -21,53 +12,47 @@
     font-style: normal;
 }
 
-/* Define CSS Variables for easier theme management */
 :root {
     --sidebar-width: 250px;
     --hamburger-size: 32px;
     --line-height: 4px;
     --line-spacing: 4px;
 
-    --color-darkest-grey: #171614; /* Main Background, Dark Borders */
-    --color-dark-grey: #211F20;    /* Container/Sidebar Background */
-    --color-medium-grey: #3a3837;  /* Input/Textarea Background */
-    --color-light-grey: #aaaaaa;  /* Disabled Text/Border, secondary text */
-    --color-white: #ffffff;       /* Text, Active Elements */
-    --color-red: #c0392b;         /* Remove Button */
-    --color-yellow: #ffffa0;      /* Status Text */
+    --color-darkest-grey: #171614;
+    --color-dark-grey: #211F20;
+    --color-medium-grey: #3a3837;
+    --color-light-grey: #aaaaaa;
+    --color-white: #ffffff;
+    --color-red: #c0392b;
+    --color-yellow: #ffffa0;
 
     --border-thin: 2px solid var(--color-darkest-grey);
     --border-thick: 4px solid var(--color-darkest-grey);
 
     --shadow-text-dark: 2px 2px #000000;
     --shadow-box-dark: 0 0 8px rgba(0, 0, 0, 0.5);
-    --shadow-box-inset: inset 0 0 5px rgba(0, 0, 0, 0.3); /* Subtle inner shadow */
+    --shadow-box-inset: inset 0 0 5px rgba(0, 0, 0, 0.3);
 
-    --minecraft-border-radius: 4px; /* Standard small radius */
-    --minecraft-container-radius: 8px; /* Larger radius for main containers */
+    --minecraft-border-radius: 4px;
+    --minecraft-container-radius: 8px;
 
-    /* Background texture (optional, requires an image) */
-    /* --bg-texture: url('path/to/texture.png'); */
 }
 
 
 body {
     font-family: 'Minecraftia', monospace;
     background-color: var(--color-darkest-grey);
-    /* background-image: var(--bg-texture); */
-    /* background-repeat: repeat; */
     color: var(--color-white);
     margin: 0;
     padding: 0;
     display: flex;
     min-height: 100vh;
-    overflow-x: hidden; /* Hide horizontal scrollbar caused by sidebar transition */
-    line-height: 1.6; /* Improve readability */
+    overflow-x: hidden;
+    line-height: 1.6;
 }
 
-/* --- Sidebar and Main Content Layout --- */
 #sidebar {
-    position: fixed; /* Fixed position so it stays visible */
+    position: fixed;
     left: 0;
     top: 0;
     width: var(--sidebar-width);
@@ -76,43 +61,42 @@ body {
     border-right: var(--border-thick);
     padding: 20px;
     box-sizing: border-box;
-    transform: translateX(-100%); /* Start off-screen */
-    transition: transform 0.3s ease; /* Smooth slide animation */
-    z-index: 100; /* Ensure sidebar is above content */
-    display: flex; /* Use flex for column layout */
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 100;
+    display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Push footer to the bottom */
-    overflow-y: auto; /* Add scrollbar if menu is too long */
+    justify-content: space-between;
+    overflow-y: auto;
     box-shadow: var(--shadow-box-dark);
 }
 
 #sidebar.open {
-    transform: translateX(0); /* Slide in */
+    transform: translateX(0);
 }
 
 .main-content {
-    flex-grow: 1; /* Take remaining space */
-    padding: 20px; /* Add padding to the content area */
-    margin-left: 0; /* Start with no margin */
-    transition: margin-left 0.3s ease; /* Smooth shift animation */
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
 }
 
-@media (min-width: 769px) { /* Apply this only on wider screens */
+@media (min-width: 769px) {
     body.sidebar-open .main-content {
-         margin-left: var(--sidebar-width); /* Shift content by sidebar width */
+         margin-left: var(--sidebar-width);
     }
 }
 
 
-/* --- Hamburger Icon --- */
 #hamburgerBtn {
     position: fixed;
-    top: 10px; /* Move higher */
-    left: 10px; /* Move further left */
+    top: 10px;
+    left: 10px;
     width: var(--hamburger-size);
     height: var(--hamburger-size);
     padding: 0;
-    background-color: var(--color-dark-grey); /* Match sidebar background */
+    background-color: var(--color-dark-grey);
     border: var(--border-thin);
     border-radius: var(--minecraft-border-radius);
     display: flex;
@@ -122,14 +106,12 @@ body {
     cursor: pointer;
     z-index: 101;
     transition: left 0.3s ease, background-color 0.2s ease, border-color 0.2s ease;
-    gap: var(--line-spacing); /* Space between lines */
-     box-shadow: var(--shadow-box-dark);
-     /* Ensure the lines stay centered if using margin fallback for gap */
-     margin: 0; /* Remove default button margin */
+    gap: var(--line-spacing);
+    margin: 0;
 }
 
 #hamburgerBtn .line {
-    width: 70%; /* Lines are 70% width of the button */
+    width: 70%;
     height: var(--line-height);
     background-color: var(--color-white);
     border-radius: 2px;
@@ -143,23 +125,18 @@ body {
 #hamburgerBtn:active {
      background-color: var(--button-bg-active);
      border-color: var(--color-light-grey);
-     /* Add a pressed effect by slightly moving the lines */
-     /* This is complex with flex/gap, might need different approach or simpler effect */
-     /* Example: transform: scale(0.95); */
 }
 #hamburgerBtn:hover .line {
-    background-color: #cccccc; /* Slightly lighter lines on hover */
+    background-color: #cccccc;
 }
 
-/* Prevent hamburger shifting with content on wider screens */
 @media (min-width: 769px) {
      body.sidebar-open #hamburgerBtn {
-         left: calc(var(--sidebar-width) + 10px); /* Shift icon by sidebar width + original gap */
+         left: calc(var(--sidebar-width) + 10px);
      }
 }
 
 
-/* --- Sidebar Content --- */
 .sidebar-header h2 {
     text-align: center;
     color: var(--color-white);
@@ -174,49 +151,47 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
-    flex-grow: 1; /* Allows the menu list to take up vertical space */
+    flex-grow: 1;
 }
 
 .sidebar-menu li {
-    margin-bottom: 8px; /* Space between menu items */
+    margin-bottom: 8px;
 }
 
 .sidebar-link {
-     /* Base button styles */
-     display: block; /* Make buttons fill list item width */
+     display: block;
      width: 100%;
      padding: 10px;
-     background-color: transparent; /* Transparent background by default */
-     color: var(--color-white); /* White text by default */
-     border: 2px solid transparent; /* Transparent border initially */
+     background-color: transparent;
+     color: var(--color-white);
+     border: 2px solid transparent;
      border-radius: var(--minecraft-border-radius);
      font-family: 'Minecraftia', monospace;
      font-size: 1em;
-     text-align: left; /* Align text left */
+     text-align: left;
      cursor: pointer;
      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-     text-shadow: none; /* Remove text shadow on sidebar links */
-     transform: none !important; /* Prevent the general button press effect */
-     box-sizing: border-box; /* Include padding and border in the element's total width */
+     text-shadow: none;
+     transform: none !important;
+     box-sizing: border-box;
 }
 
 .sidebar-link:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* Subtle white hover overlay */
-    border-color: var(--color-darkest-grey); /* Dark border on hover */
-    color: var(--color-white); /* White text on hover */
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-darkest-grey);
+    color: var(--color-white);
 }
 
 .sidebar-link:active {
-    background-color: rgba(255, 255, 255, 0.2); /* More prominent active state */
-    border-color: var(--color-light-grey); /* Lighter border when pressed */
-    color: var(--color-white); /* White text when pressed */
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--color-light-grey);
+    color: var(--color-white);
 }
 
-/* Style for the active sidebar link (when its corresponding section is displayed) */
 .sidebar-link.active-section {
-     background-color: rgba(255, 255, 255, 0.15); /* Persistent highlight background */
-     border-color: var(--color-white); /* White border for the active link */
-     color: var(--color-white); /* White text for the active link */
+     background-color: rgba(255, 255, 255, 0.15);
+     border-color: var(--color-white);
+     color: var(--color-white);
      font-weight: bold;
 }
 
@@ -224,91 +199,78 @@ body {
 .sidebar-footer {
     margin-top: 20px;
     padding-top: 10px;
-    border-top: var(--border-thin); /* Thin dark border above footer */
-    text-align: center; /* Center the footer content */
+    border-top: var(--border-thin);
+    text-align: center;
 }
 
 
-/* --- Content Sections --- */
 .content-section {
-    display: none; /* All content sections are hidden by default */
-    /* JS will set display: block; for the active section */
-    /* Padding is applied to .main-content wrapper */
+    display: none;
 }
-/* The section that is currently active will have display: block set by JavaScript */
-/* #homeTool { display: block; } */ /* Initial state set by JS */
 
 
-/* Home Page Specific Styles */
 #homeTool {
      text-align: center;
-     padding-top: 50px; /* Space from the top */
+     padding-top: 50px;
 }
 #homeTool h1 {
      margin-bottom: 20px;
 }
 #homeTool p {
     margin-bottom: 10px;
-     color: var(--color-white); /* White text for home page paragraphs */
+     color: var(--color-white);
      font-size: 1em;
      text-shadow: var(--shadow-text-dark);
 }
 
 
-/* Settings Page Specific Styles */
 #settingsTool {
-     /* No specific top-level styles needed, uses general section styles */
 }
  #settingsTool .section {
      margin-top: 20px;
-     text-align: center; /* Center content within settings sections */
+     text-align: center;
  }
   #settingsTool .option-group {
-      justify-content: center; /* Center flex items horizontally */
-      align-items: center; /* Center flex items vertically */
-      flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-      gap: 10px; /* Space between option items */
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
   }
    #settingsTool .option-group label {
-       min-width: 150px; /* Minimum width for labels */
-       flex-basis: auto; /* Let flex determine basis */
-       margin-right: 0; /* Gap handles spacing */
-       margin-bottom: 0; /* Reset margin bottom */
+       min-width: 150px;
+       flex-basis: auto;
+       margin-right: 0;
+       margin-bottom: 0;
        text-align: left;
    }
    #settingsTool .option-group input[type="range"] {
-       width: 150px; /* Fixed width for sliders */
-        flex-grow: 0; /* Don't grow */
-        margin-right: 0; /* Gap handles spacing */
+       width: 150px;
+        flex-grow: 0;
+        margin-right: 0;
         vertical-align: middle;
    }
-    /* Adjust value span next to range */
    #settingsTool .option-group span {
-       flex-basis: auto; /* Don't force new line */
+       flex-basis: auto;
        text-align: left;
        margin-top: 0;
        padding-right: 0;
-        min-width: 40px; /* Minimum width for percentage display */
+        min-width: 40px;
    }
    #toggleMusicBtn {
-       margin-top: 20px; /* Space above the music toggle button */
+       margin-top: 20px;
    }
 
 
-/* --- General Tool Section Styles --- */
-/* These styles apply to the tool sections within the main content */
 .container {
-    /* This container is inside main-content and acts as a simple wrapper */
-    /* Its styles are minimal now, mostly relying on main-content padding */
     background-color: transparent;
     padding: 0;
     box-shadow: none;
     border: none;
     max-width: 100%;
-    margin: 0 auto; /* Center the inner content horizontally */
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    align-items: stretch; /* Stretch to fill width */
+    align-items: stretch;
 }
 
 h1, h2, h3 {
@@ -325,7 +287,7 @@ h2 {
     font-size: 1.2em;
 }
 h2:first-child {
-    margin-top: 0; /* No top margin for the first h2 in a section */
+    margin-top: 0;
 }
 h3 {
     margin-top: 15px;
@@ -337,82 +299,77 @@ h3 {
 p {
      text-align: center;
      margin-bottom: 15px;
-     color: var(--color-light-grey); /* Lighter color for body text */
+     color: var(--color-light-grey);
      font-size: 0.9em;
-     text-shadow: var(--shadow-text-dark); /* Text shadow for depth */
+     text-shadow: var(--shadow-text-dark);
 }
 
 .section {
     margin-bottom: 20px;
     padding: 15px;
     border: var(--border-thin);
-    background-color: rgba(0, 0, 0, 0.1); /* Subtle transparent background */
+    background-color: rgba(0, 0, 0, 0.1);
     border-radius: var(--minecraft-border-radius);
-    box-shadow: var(--shadow-box-inset); /* Add subtle inner shadow */
+    box-shadow: var(--shadow-box-inset);
 }
 
 
-/* --- Input and Textarea Styles --- */
 input[type="text"],
 input[type="file"],
 input[type="number"],
 textarea {
      padding: 8px 6px;
      border: var(--border-thin);
-     background-color: var(--color-medium-grey); /* Dark input background */
-     color: var(--color-white); /* White text */
+     background-color: var(--color-medium-grey);
+     color: var(--color-white);
      font-family: 'Minecraftia', monospace;
      box-sizing: border-box;
       border-radius: var(--minecraft-border-radius);
-      min-width: 100px; /* Ensure inputs are not too small */
-      box-shadow: var(--shadow-box-inset); /* Subtle inner shadow */
-      outline: none; /* Remove default outline */
-      display: block; /* Make them block elements by default */
-      width: 100%; /* Make them full width */
+      min-width: 100px;
+      box-shadow: var(--shadow-box-inset);
+      outline: none;
+      display: block;
+      width: 100%;
 }
-/* Override width/display for inputs inside flex .form-group or .option-group */
 .form-group input,
 .option-group input {
-    display: inline-block; /* Or flex-grow */
-    width: auto; /* Allow width to be determined by flex/content */
-     flex-grow: 1; /* Allow them to grow to fill space */
+    display: inline-block;
+    width: auto;
+     flex-grow: 1;
 }
 .form-group input[type="file"] {
-    flex-grow: 0; /* File input usually shouldn't grow */
+    flex-grow: 0;
 }
 .option-group input[type="range"] {
     flex-grow: 1;
-    width: auto; /* Let flex determine width */
+    width: auto;
 }
 
 
 input[type="text"]:focus,
 input[type="number"]:focus,
 textarea:focus {
-    border-color: var(--color-white); /* White border on focus */
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* Subtle white glow on focus */
+    border-color: var(--color-white);
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
-textarea { line-height: 1.5; /* Improve readability */ }
+textarea { line-height: 1.5; }
 textarea::placeholder { color: #c0c0c0; opacity: 0.7; }
 
 
-/* --- Range Input Styling (Minecraft Colors) --- */
- .option-group input[type="range"] {
+.option-group input[type="range"] {
       height: 8px;
-      padding: 8px 0; /* Make clickable area larger */
+      padding: 8px 0;
       border: none;
       border-radius: 10px;
       background: transparent;
-      appearance: none; /* Remove default styling */
+      appearance: none;
       outline: none;
       margin-top: 4px;
       margin-bottom: 4px;
       cursor: pointer;
       min-width: 100px;
-      /* margin-right: 5px; /* Space handled by gap */
  }
-  /* Use Minecraft colors for the track fill */
  input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
     height: 8px;
@@ -422,49 +379,45 @@ textarea::placeholder { color: #c0c0c0; opacity: 0.7; }
  }
  input[type="range"]::-moz-range-track { background: var(--color-medium-grey); height: 8px; border-radius: 10px;}
  input[type="range"]::-moz-range-progress { background: var(--color-white); height: 8px; border-radius: 10px 0 0 10px; }
- input[type="range"]::-ms-track { /* IE/Edge */
+ input[type="range"]::-ms-track {
      width: 100%; height: 8px; background: transparent; border-color: transparent; border-width: 16px 0; color: transparent; }
  input[type="range"]::-ms-fill-lower { background: var(--color-white); border-radius: 10px 0 0 10px; }
  input[type="range"]::-ms-fill-upper { background: var(--color-medium-grey); border-radius: 10px; }
 
- /* Thumb (Handle) */
- input[type="range"]::-webkit-slider-thumb,
- input[type="range']::-ms-thumb { /* Added Edge/IE thumb */
+ input[type="range"]::-webkit-slider-thumb {
     appearance: none;
     width: 20px;
     height: 20px;
     background: var(--color-white);
-    border-radius: 50%; /* Circular handle */
+    border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Darker shadow */
-    margin-top: -6px; /* Adjust to center thumb vertically on the track */
-    border: 1px solid var(--color-darkest-grey); /* Add a dark border */
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    margin-top: -6px;
+    border: 1px solid var(--color-darkest-grey);
  }
-  input[type="range"]::-moz-range-thumb { /* Firefox thumb */
+  input[type="range"]::-moz-range-thumb {
     width: 20px;
     height: 20px;
     background: var(--color-white);
-    border-radius: 50%; /* Circular handle */
+    border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Darker shadow */
-    border: 1px solid var(--color-darkest-grey); /* Add a dark border */
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    border: 1px solid var(--color-darkest-grey);
  }
-  input[type="range"]::-ms-thumb { margin-top: 0; /* MS thumb position differs */ }
+  input[type="range"]::-ms-thumb { margin-top: 0; }
 
 
-/* Adjust threshold value span - Specific to QR tool */
 .option-group #thresholdValue {
      flex-basis: auto;
-     width: 40px; /* Fixed width for alignment */
+     width: 40px;
      text-align: center;
      margin-bottom: 0;
      margin-top: 0;
      padding-right: 0;
      flex-shrink: 0;
  }
-/* Adjust settings volume value spans */
 #settingsTool .option-group span {
-     min-width: 40px; /* Ensure percentage display has width */
+     min-width: 40px;
 }
 
 
@@ -476,12 +429,11 @@ textarea::placeholder { color: #c0c0c0; opacity: 0.7; }
     margin-top: 15px;
     margin-bottom: 0;
     display: flex;
-    gap: 10px; /* Space between buttons */
+    gap: 10px;
     justify-content: center;
-    flex-wrap: wrap; /* Allow buttons to wrap */
+    flex-wrap: wrap;
 }
 
-/* --- Button Styling (Unified and Refined) --- */
 button {
     display: inline-block;
     padding: 10px 15px;
@@ -495,56 +447,46 @@ button {
     box-sizing: border-box;
     border-radius: var(--minecraft-border-radius);
      text-shadow: var(--shadow-text-dark);
-     min-width: 120px; /* Slightly wider minimum width */
+     min-width: 120px;
      text-align: center;
-     /* Add subtle bevel/shadow effect */
     box-shadow: 1px 1px 0px 0px #000000, 2px 2px 0px 0px rgba(0,0,0,0.5);
-    /* Remove default button margin/padding if any */
     margin: 0;
 }
 
-/* Button Hover State */
 button:hover:not(:disabled) {
     background-color: var(--button-bg-hover);
     border-color: var(--color-white);
-     /* Adjust shadow/bevel on hover */
      box-shadow: 1px 1px 0px 0px #000000, 3px 3px 0px 0px rgba(0,0,0,0.5);
 }
 
-/* Button Active State (Pressing) */
 button:active:not(:disabled) {
     background-color: var(--button-bg-active);
     border-color: var(--color-light-grey);
-    transform: translateY(1px); /* Move down to simulate press */
-     /* Adjust shadow/bevel on active */
+    transform: translateY(1px);
      box-shadow: 0px 0px 0px 0px #000000, 1px 1px 0px 0px rgba(0,0,0,0.5);
 }
 
-/* Button Disabled State */
 button:disabled {
     background-color: var(--button-disabled-bg);
     color: var(--button-disabled-color);
     border-color: var(--button-disabled-border);
     cursor: not-allowed;
-    box-shadow: none; /* Remove shadow when disabled */
+    box-shadow: none;
     text-shadow: none;
     transform: none;
 }
 
-/* Specific styles for preset list buttons (Override some general styles) */
-/* Target buttons directly within list items to ensure specificity */
 #presetList li button,
 #selectedPresetsList li button {
-    width: auto; /* Override full width if applied elsewhere */
+    width: auto;
     padding: 4px 8px;
     font-size: 0.9em;
-     min-width: auto; /* Override min-width */
+     min-width: auto;
      margin-left: 10px;
-     /* Match general button colors unless specifically overridden below */
      background-color: var(--button-bg-dark);
-     border-color: var(--border-thin); /* Keep thin border */
+     border-color: var(--border-thin);
      text-shadow: var(--shadow-text-dark);
-     box-shadow: none; /* Remove the chunky button shadow */
+     box-shadow: none;
 }
 #presetList li button:hover:not(:disabled),
 #selectedPresetsList li button:hover:not(:disabled) {
@@ -560,14 +502,13 @@ button:disabled {
 }
 
 
-/* Style for the red "Remove" buttons in the selected presets list */
 #selectedPresetsList li button {
      background-color: var(--red-remove-bg);
      border-color: var(--red-remove-border);
 }
 #selectedPresetsList li button:hover:not(:disabled) {
      background-color: var(--red-remove-hover);
-     border-color: var(--red-remove-bg); /* Darker border on hover */
+     border-color: var(--red-remove-bg);
 }
 #selectedPresetsList li button:active:not(:disabled) {
      background-color: var(--red-remove-active);
@@ -575,50 +516,44 @@ button:disabled {
 }
 
 
-/* --- Image Tool Specifics --- */
 #imagePreview {
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 15px auto 0; /* Center the preview */
+    margin: 15px auto 0;
     border: var(--border-thin);
     border-radius: var(--minecraft-border-radius);
 }
 
-/* Hide the processing canvas */
 #processingCanvas {
     display: none;
 }
 
-/* Add a class to the canvas when it contains a processed image for styling */
-/* This helps distinguish it from the potentially initially invisible canvas */
 .pixel-preview {
-     border: var(--border-thin); /* Match preview border */
+     border: var(--border-thin);
      border-radius: var(--minecraft-border-radius);
-     display: block !important; /* Ensure canvas is displayed when previewing */
-     margin: 15px auto 0; /* Center the canvas preview */
-     max-width: 100%; /* Ensure it fits */
-     image-rendering: pixelated; /* Keep pixels sharp */
-     /* Note: The actual canvas background color is set in JS (ctx.fillStyle) */
+     display: block !important;
+     margin: 15px auto 0;
+     max-width: 100%;
+     image-rendering: pixelated;
 }
 
 
-/* --- Responsive Adjustments --- */
-@media (max-width: 768px) { /* Apply these styles when screen width is 768px or less */
+@media (max-width: 768px) {
     :root {
-        --sidebar-width: 100%; /* Sidebar takes full width on mobile */
+        --sidebar-width: 100%;
         --hamburger-size: 32px;
-        --line-height: 3px; /* Smaller lines */
-        --line-spacing: 3px; /* Closer lines */
+        --line-height: 3px;
+        --line-spacing: 3px;
     }
 
     #sidebar {
         transform: translateX(-100%);
         width: var(--sidebar-width);
-        border-right: none; /* Remove right border */
-        border-bottom: var(--border-thick); /* Add bottom border */
-         padding: 15px; /* Adjust padding */
-         border-radius: 0; /* Remove border radius on mobile */
+        border-right: none;
+        border-bottom: var(--border-thick);
+         padding: 15px;
+         border-radius: 0;
     }
      #sidebar.open {
          transform: translateX(0);
@@ -627,100 +562,89 @@ button:disabled {
     #hamburgerBtn {
         top: 10px;
         left: 10px;
-         background-color: var(--color-darkest-grey); /* Darker background on mobile */
+         background-color: var(--color-darkest-grey);
          border-color: var(--border-color);
-         z-index: 102; /* Ensure it's above sidebar */
+         z-index: 102;
     }
-     /* Remove shift on mobile - hamburger stays fixed relative to viewport */
      body.sidebar-open #hamburgerBtn {
          left: 10px;
      }
 
      .main-content {
-         padding: 15px; /* Adjust padding */
-         margin-left: 0 !important; /* Ensure no margin on small screen */
-         /* Add space below fixed icon + some buffer */
+         padding: 15px;
+         margin-left: 0 !important;
          margin-top: calc(var(--hamburger-size) + 25px);
      }
 
-    /* Ensure sidebar covers content when open on small screens */
     body.sidebar-open #sidebar {
-        height: 100vh; /* Cover the full viewport height */
-        padding-top: calc(var(--hamburger-size) + 25px); /* Add space at top for hamburger */
+        height: 100vh;
+        padding-top: calc(var(--hamburger-size) + 25px);
     }
 
-     /* Adjust layout for form/option groups */
     .form-group, .option-group {
-        flex-direction: column; /* Stack items vertically */
-        align-items: flex-start; /* Align items to the start */
+        flex-direction: column;
+        align-items: flex-start;
         margin-bottom: 10px;
     }
      .form-group label, .option-group label {
          margin-right: 0;
-         margin-bottom: 5px; /* Space below label */
-         min-width: auto; /* Allow label to shrink */
+         margin-bottom: 5px;
+         min-width: auto;
           flex-basis: auto;
      }
-      /* Make inputs/sliders full width on mobile */
       input[type="text"], input[type="file"], input[type="number"], textarea,
       .form-group input, .option-group input, .option-group input[type="range"] {
           width: 100%;
           box-sizing: border-box;
           margin-right: 0;
-          flex-grow: 0; /* Prevent growing, use full width */
+          flex-grow: 0;
       }
        .option-group span {
-          text-align: left; /* Align helper text left */
+          text-align: left;
            padding-right: 0;
-            flex-basis: 100%; /* Force helper text below */
-            margin-top: 2px; /* Space above helper text */
-            font-size: 0.8em; /* Make helper text smaller */
+            flex-basis: 100%;
+            margin-top: 2px;
+            font-size: 0.8em;
        }
-        /* Specific adjustment for threshold value span */
        .option-group #thresholdValue {
-            width: auto; /* Auto width */
+            width: auto;
             text-align: left;
-            margin-top: 5px; /* Push below range input */
-            flex-basis: auto; /* Don't force new line */
+            margin-top: 5px;
+            flex-basis: auto;
        }
-        /* Specific adjustment for settings value spans */
        #settingsTool .option-group span {
             min-width: auto;
-            flex-basis: auto; /* Don't force new line */
-            margin-top: 0; /* Reset margin */
-            font-size: 1em; /* Use full size for percentage */
+            flex-basis: auto;
+            margin-top: 0;
+            font-size: 1em;
        }
 
 
-     /* Adjust button group layout */
-     .button-group {
-         flex-direction: column; /* Stack buttons vertically */
-         gap: 8px; /* Space between stacked buttons */
-     }
+    .button-group {
+        flex-direction: column;
+        gap: 8px;
+    }
       button {
-          width: 100%; /* Make buttons full width */
-           padding: 8px 10px; /* Adjust padding */
+          width: 100%;
+           padding: 8px 10px;
            font-size: 0.95em;
-           min-width: auto; /* Allow to shrink */
+           min-width: auto;
       }
 
-      /* Adjust preset list item layout */
       #presetList li, #selectedPresetsList li {
-           flex-direction: column; /* Stack list item content */
-           align-items: flex-start; /* Align content to the start */
-           padding: 6px; /* Adjust padding */
+           flex-direction: column;
+           align-items: flex-start;
+           padding: 6px;
       }
-       /* Adjust Add/Remove buttons within list items */
        #presetList li button,
        #selectedPresetsList li button {
-           margin-top: 5px; /* Space above button */
+           margin-top: 5px;
             margin-left: 0;
-            align-self: flex-end; /* Align button to the right of the stacked content */
-            width: auto; /* Don't make button full width */
-            min-width: 80px; /* Ensure button is still tappable */
+            align-self: flex-end;
+            width: auto;
+            min-width: 80px;
        }
 
-    /* Settings Specific Mobile Adjustments */
     #settingsTool .option-group label {
         min-width: auto;
         flex-basis: auto;
@@ -734,14 +658,11 @@ button:disabled {
 
 }
 
-/* Add a class to the canvas when it contains a processed image for styling */
-/* This helps distinguish it from the potentially initially invisible canvas */
 .pixel-preview {
-     border: var(--border-thin); /* Match preview border */
+     border: var(--border-thin);
      border-radius: var(--minecraft-border-radius);
-     display: block !important; /* Ensure canvas is displayed when previewing */
-     margin: 15px auto 0; /* Center the canvas preview */
-     max-width: 100%; /* Ensure it fits */
-     image-rendering: pixelated; /* Keep pixels sharp */
-     /* Note: The actual canvas background color is set in JS (ctx.fillStyle) */
+     display: block !important;
+     margin: 15px auto 0;
+     max-width: 100%;
+     image-rendering: pixelated;
 }
