@@ -1,4 +1,4 @@
-/ Wait for the DOM to be fully loaded
+// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Global Elements and Tab Functionality ---
@@ -23,26 +23,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Activate the clicked button
-        const clickedButton = document.querySelector(`.tab-button[onclick*="openTab('${tabId}')"]`);
+        // Use a simple loop or find method as querySelector with complex selectors can be tricky
+         let clickedButton = null;
+         for (const button of tabButtons) {
+             if (button.getAttribute('onclick') && button.getAttribute('onclick').includes(`openTab('${tabId}')`)) {
+                 clickedButton = button;
+                 break;
+             }
+         }
         if (clickedButton) {
             clickedButton.classList.add('active');
         }
 
-         // No specific initialization needed for tabs currently, handled by DOMContentLoaded
+         // --- IMPORTANT: Perform initial setup for the specific tab being opened ---
+         // This ensures elements within the tab are ready when needed
+         if (tabId === 'functionPackTool') {
+             // Initial render for function pack presets
+             renderPresetList();
+             // Reset editor area state if switching back to this tab (optional, depends on desired behavior)
+             // resetEditorArea(); // Decide if you want to reset on every tab switch
+         } else if (tabId === 'qrTool') {
+             // QR tool has threshold slider setup that needs to run
+             if (thresholdInput) {
+                 const thresholdValueSpan = document.getElementById('thresholdValue');
+                 const updateThresholdDisplay = () => {
+                     if (thresholdValueSpan) {
+                        thresholdValueSpan.textContent = thresholdInput.value;
+                     }
+                     thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
+                 };
+                 // Add/re-add the listener and update immediately
+                 thresholdInput.removeEventListener('input', updateThresholdDisplay); // Remove old listener if any
+                 thresholdInput.addEventListener('input', updateThresholdDisplay);
+                 updateThresholdDisplay(); // Update immediately on tab switch/load
+             }
+         } else if (tabId === 'nbtTool') {
+             // NBT tool doesn't have complex initial setup needed on tab switch
+         }
     }
 
-    // Add event listeners for tab buttons
+    // Add event listeners for tab buttons using delegation or direct attachment
+    // Direct attachment is fine here and perhaps clearer
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            const tabId = button.getAttribute('onclick').match(/openTab\('(.+?)'\)/)[1];
-            openTab(tabId);
+            // Extract tabId from the onclick attribute
+            const onclickAttr = button.getAttribute('onclick');
+            const match = onclickAttr.match(/openTab\('(.+?)'\)/);
+            if (match && match[1]) {
+                const tabId = match[1];
+                openTab(tabId);
+            }
         });
     });
 
+    // --- Initial Page Load Setup ---
+    // Open the first tab (Function Pack Creator) by default immediately after tab logic is defined
+    openTab('functionPackTool');
 
-    // --- Function Pack Creator Tool Logic ---
-    const prepareFilesBtn = document.getElementById('prepareFilesBtn'); // New button
-    const generateAndDownloadPackBtn = document.getElementById('generateAndDownloadPackBtn'); // Renamed button
+
+    // --- Function Pack Creator Tool Logic (Element references now happen AFTER initial tab open) ---
+    // Get element references *after* the initial tab is made visible
+    const prepareFilesBtn = document.getElementById('prepareFilesBtn');
+    const generateAndDownloadPackBtn = document.getElementById('generateAndDownloadPackBtn');
     const packNameInput = document.getElementById('packName');
     const packDescriptionInput = document.getElementById('packDescription');
     const packIconInput = document.getElementById('packIcon');
@@ -59,72 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Preset Definitions (Same as before) ---
     const allPresets = [
-        {
-            id: 'coords_to_score',
-            name: 'Coords to Scores',
-            description: 'Stores player X, Y, Z coordinates into scoreboard objectives each tick.',
-            objectives: [
-                { name: "coordX", type: "dummy" },
-                { name: "coordY", type: "dummy" },
-                { name: "coordZ", type: "dummy" }
-            ],
-            setup_commands: [],
-            main_commands: [
-                '# Store player coordinates in scores',
-                'execute as @a store result score @s coordX run data get entity @s Pos[0] 100', // Scale by 100
-                'execute as @a store result score @s coordY run data get entity @s Pos[1] 100',
-                'execute as @a store result score @s coordZ run data get entity @s Pos[2] 100'
-            ],
-            additional_files: []
-        },
-        {
-            id: 'on_death',
-            name: 'On Player Death',
-            description: 'Detects player deaths using deathCount and runs a function.',
-            objectives: [
-                { name: "deaths", type: "deathCount" }
-            ],
-            setup_commands: [],
-            main_commands: [
-                '# Check for players who have died',
-                'execute as @a[scores={deaths=1..}] run function <pack_namespace>:on_death_action'
-            ],
-            additional_files: [
-                 {
-                     filename: "on_death_action.mcfunction",
-                     content: "# This function runs when a player dies.\n# Add your commands here.\n# Example: Send a message\ntellraw @s {\"text\":\"You died!\",\"color\":\"red\"}\n\n# IMPORTANT: Reset the death score\nscoreboard players set @s deaths 0"
-                 }
-            ]
-        },
-        {
-            id: 'on_first_join',
-            name: 'On First Join',
-            description: 'Runs a function when a player joins the world for the first time.',
-             objectives: [
-                { name: "has_joined", type: "dummy" }
-            ],
-            setup_commands: [],
-            main_commands: [
-                '# Check for players who have just joined',
-                'execute as @a unless score @s has_joined matches 1 run function <pack_namespace>:on_first_join_action',
-                '# Mark players as having joined',
-                'scoreboard players set @a[scores={has_joined=..0}] has_joined 1' // Set score for those just processed
-            ],
-             additional_files: [
-                 {
-                     filename: "on_first_join_action.mcfunction",
-                     content: "# This function runs on a player's first join.\n# Add commands here.\n# Example: Send a welcome message\ntellraw @s {\"text\":\"Welcome to the world!\",\"color\":\"gold\"}"
-                 }
-            ]
-        }
+        { id: 'coords_to_score', name: 'Coords to Scores', description: 'Stores player X, Y, Z coordinates into scoreboard objectives each tick.', objectives: [{ name: "coordX", type: "dummy" }, { name: "coordY", type: "dummy" }, { name: "coordZ", type: "dummy" }], setup_commands: [], main_commands: ['# Store player coordinates in scores', 'execute as @a store result score @s coordX run data get entity @s Pos[0] 100', 'execute as @a store result score @s coordY run data get entity @s Pos[1] 100', 'execute as @a store result score @s coordZ run data get entity @s Pos[2] 100'], additional_files: [] },
+        { id: 'on_death', name: 'On Player Death', description: 'Detects player deaths using deathCount and runs a function.', objectives: [{ name: "deaths", type: "deathCount" }], setup_commands: [], main_commands: ['# Check for players who have died', 'execute as @a[scores={deaths=1..}] run function <pack_namespace>:on_death_action'], additional_files: [{ filename: "on_death_action.mcfunction", content: "# This function runs when a player dies.\n# Add your commands here.\n# Example: Send a message\ntellraw @s {\"text\":\"You died!\",\"color\":\"red\"}\n\n# IMPORTANT: Reset the death score\nscoreboard players set @s deaths 0" }] },
+        { id: 'on_first_join', name: 'On First Join', description: 'Runs a function when a player joins the world for the first time.', objectives: [{ name: "has_joined", type: "dummy" }], setup_commands: [], main_commands: ['# Check for players who have just joined', 'execute as @a unless score @s has_joined matches 1 run function <pack_namespace>:on_first_join_action', '# Mark players as having joined', 'scoreboard players set @a[scores={has_joined=..0}] has_joined 1'], additional_files: [{ filename: "on_first_join_action.mcfunction", content: "# This function runs on a player's first join.\n# Add commands here.\n# Example: Send a welcome message\ntellraw @s {\"text\":\"Welcome to the world!\",\"color\":\"gold\"}" }] }
         // Add more presets here
     ];
 
     // State for Function Pack Creator
     let selectedPresetIds = new Set();
-    // Map to store the content of files that can be edited (path -> content string)
     let editableFiles = new Map();
-    let currentEditingFile = null; // Track which file is currently in the textarea
+    let currentEditingFile = null;
 
 
     // --- Helper Functions for Function Pack Creator ---
@@ -161,14 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
                  selectedPresetsListUl.appendChild(li);
             }
          });
-         renderPresetList(); // Re-render available list
+         renderPresetList();
          // Hide editor area and disable download button when presets change
          resetEditorArea();
     }
 
     function handlePresetButtonClick(event) {
         const button = event.target.closest('button');
-        if (!button) return;
+        if (!button || !button.dataset.action || !button.dataset.presetId) return;
 
         const presetId = button.dataset.presetId;
         const action = button.dataset.action;
@@ -199,7 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Editor Management ---
 
     function resetEditorArea() {
-        if (!fileEditorArea || !fileEditorTextarea || !editableFileListDiv || !editorStatusDiv || !generateAndDownloadPackBtn || !prepareFilesBtn) return;
+        // Check all necessary elements exist before manipulating
+        if (!fileEditorArea || !fileEditorTextarea || !editableFileListDiv || !editorStatusDiv || !generateAndDownloadPackBtn || !prepareFilesBtn) {
+             console.warn("Attempted to reset editor area before all elements are available.");
+             // This might happen if reset is called on DOMContentLoaded before all elements are found.
+             // We can just return if elements aren't found yet.
+             return;
+        }
         fileEditorArea.style.display = 'none';
         editableFiles.clear();
         currentEditingFile = null;
@@ -224,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add buttons for each editable file
         editableFiles.forEach((content, filename) => {
             const button = document.createElement('button');
-            button.textContent = filename;
+            button.textContent = filename; // Display filename as button text
             button.dataset.filename = filename;
             if (filename === currentEditingFile) {
                 button.classList.add('active');
@@ -234,7 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadFileIntoEditor(filename) {
-        if (!fileEditorTextarea || !editableFiles.has(filename) || !editableFileListDiv || !editorStatusDiv) return;
+        // Check all necessary elements exist
+        if (!fileEditorTextarea || !editableFiles.has(filename) || !editableFileListDiv || !editorStatusDiv) {
+             console.warn("Attempted to load file into editor before all elements are available or file missing:", filename);
+             return;
+        }
 
         // Save current editor content if a file was being edited
         if (currentEditingFile && fileEditorTextarea) {
@@ -244,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load new file content
         currentEditingFile = filename;
         fileEditorTextarea.value = editableFiles.get(filename);
-        editorStatusDiv.textContent = `Editing: ${filename}`;
+        editorStatusDiv.textContent = `Editing: functions/${filename}`; // Show full path for clarity
 
         // Update button highlighting
         editableFileListDiv.querySelectorAll('button').forEach(button => {
@@ -257,6 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Focus the textarea
         fileEditorTextarea.focus();
+         // Scroll to the top of the textarea when loading a new file
+         fileEditorTextarea.scrollTop = 0;
     }
 
     // Save editor content back to the map as user types
@@ -272,10 +270,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function prepareFilesForEditing() {
          if (!prepareFilesBtn || !packNameInput || !packDescriptionInput || !packStatusDiv || !fileEditorArea || !generateAndDownloadPackBtn) {
              console.error("Missing required elements for file preparation.");
+             if(packStatusDiv) packStatusDiv.textContent = 'Error preparing files: Missing elements.';
              return;
          }
 
-        prepareFilesBtn.disabled = true;
+        prepareFilesBtn.disabled = true; // Disable while preparing
         if(packStatusDiv) packStatusDiv.textContent = 'Preparing files...';
         resetEditorArea(); // Reset editor area state first
 
@@ -334,7 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
              ...Array.from(requiredObjectives.keys()).sort().map(objName => {
                  const obj = requiredObjectives.get(objName);
                  // Use `execute as @a at @s` to target a player context, which is necessary for /scoreboard objectives add
-                 return `execute as @a at @s unless score @s ${obj.name} objectives matches 0 run scoreboard objectives add ${obj.name} ${obj.type}`;
+                 return `execute as @a at @s unless score @s "${obj.name}" objectives matches 0 run scoreboard objectives add "${obj.name}" ${obj.type}`;
+                 // Added quotes around objective names in command for safety
              })
          ];
 
@@ -343,18 +343,19 @@ document.addEventListener('DOMContentLoaded', () => {
              `# Setup commands for pack: ${packName}`,
               '# This function runs once when the pack is loaded/enabled (typically via main.mcfunction on first tick).',
               '',
-              ...Array.from(requiredSetupCommands).sort() // Sort setup commands too
+              ...Array.from(requiredSetupCommands).sort()
          ];
 
 
         // --- Store Content for Editing ---
-         editableFiles.set('main.mcfunction', mainCommands.join('\n'));
-         editableFiles.set('objectives.mcfunction', objectiveCommands.join('\n'));
-         editableFiles.set('setup.mcfunction', setupCommands.join('\n'));
+        // Store filenames relative to the functions/[namespace] folder
+         editableFiles.set(`${packNamespace}/main.mcfunction`, mainCommands.join('\n'));
+         editableFiles.set(`${packNamespace}/objectives.mcfunction`, objectiveCommands.join('\n'));
+         editableFiles.set(`${packNamespace}/setup.mcfunction`, setupCommands.join('\n'));
 
          // Add additional files from presets to the editable list
          additionalPresetFiles.forEach(file => {
-            // Prefix with namespace to reflect folder structure
+            // These should already have the namespace path included if designed that way
              editableFiles.set(`${packNamespace}/${file.filename}`, file.content);
          });
 
@@ -364,8 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
          renderEditableFileList();
 
          // Load the first file (main.mcfunction is a good default)
-         if (editableFiles.size > 0) {
-             loadFileIntoEditor('main.mcfunction'); // Assuming main.mcfunction always exists
+         const firstFile = `${packNamespace}/main.mcfunction`;
+         if (editableFiles.has(firstFile)) {
+             loadFileIntoEditor(firstFile);
+         } else if (editableFiles.size > 0) {
+             // Fallback to the first file in the map if main.mcfunction wasn't generated for some reason
+              loadFileIntoEditor(editableFiles.keys().next().value);
          } else {
               // Should not happen with core files, but good fallback
              editorStatusDiv.textContent = 'No editable files were generated.';
@@ -384,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function generateAndDownloadPack() {
          if (!generateAndDownloadPackBtn || !packStatusDiv || !packNameInput || !packDescriptionInput || !packIconInput || !editableFiles) {
              console.error("Missing required elements for pack generation.");
+             if(packStatusDiv) packStatusDiv.textContent = 'Error generating pack: Missing elements.';
              return;
          }
 
@@ -392,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const packName = packNameInput.value.trim() || 'My Function Pack';
         const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool';
-        const packIconFile = packIconInput.files[0];
         const packNamespace = sanitizeNamespace(packName) || 'my_pack';
 
         const manifestUuid = generateUUID();
@@ -431,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zip.file("manifest.json", manifestContent);
 
         if (packIconFile) {
-            // Add pack icon asynchronously
+             // Add pack icon asynchronously
              try {
                  const iconData = await packIconFile.arrayBuffer(); // Read file content
                  zip.file("pack_icon.png", iconData);
@@ -443,27 +448,17 @@ document.addEventListener('DOMContentLoaded', () => {
              }
         }
 
-        // Create the functions folder and namespace subfolder
+        // Create the functions folder
         const functionsFolder = zip.folder("functions");
-        const namespaceFolder = functionsFolder.folder(packNamespace);
 
-        // Add tick.json
+        // Add tick.json directly inside the functions folder
         functionsFolder.file("tick.json", tickJsonContent);
 
-        // Add editable files from the map
+        // Add editable files from the map into their correct paths (inside functions/[namespace])
         editableFiles.forEach((content, filename) => {
-            // Need to handle files inside the namespace folder vs outside (tick.json)
-            // Our filenames in the map are already relative to functions/
-            // If they contain the namespace, put them inside, otherwise at functions/
-             if (filename.startsWith(packNamespace + '/')) {
-                 // Remove namespace prefix for path inside the namespace folder
-                 const pathInsideNamespace = filename.substring(packNamespace.length + 1);
-                 namespaceFolder.file(pathInsideNamespace, content);
-             } else {
-                 // Files like tick.json (which isn't in editableFiles anyway) or future files at functions/
-                 // This case is less likely with the current editable files (main, objectives, setup)
-                 functionsFolder.file(filename, content);
-             }
+            // The keys in editableFiles are already functions/[namespace]/filename.mcfunction
+            // So we can add them directly relative to the zip root
+             zip.file(`functions/${filename}`, content);
         });
 
 
@@ -485,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Add event listeners for Function Pack tab
+    // Add event listeners for Function Pack tab elements (Ensure elements exist)
     if (prepareFilesBtn) prepareFilesBtn.addEventListener('click', prepareFilesForEditing);
     if (generateAndDownloadPackBtn) generateAndDownloadPackBtn.addEventListener('click', generateAndDownloadPack);
     if (presetListDiv) presetListDiv.addEventListener('click', handlePresetButtonClick); // Delegation for Add/Remove
@@ -501,16 +496,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fileEditorTextarea) {
          // Listen for input to save changes as user types
          fileEditorTextarea.addEventListener('input', handleEditorInput);
-          // Optional: save on blur too, might be less frequent but guarantees save
-          // fileEditorTextarea.addEventListener('blur', handleEditorInput);
+         // Optional: save on blur too, might be less frequent but guarantees save
+         // fileEditorTextarea.addEventListener('blur', handleEditorInput);
     }
 
 
-     // Initial render for function pack presets
-    if (presetListDiv) renderPresetList();
-
-
-    // --- QR Code to MCFunction Tool Logic (Same as before) ---
+    // --- QR Code to MCFunction Tool Logic ---
     // Get element references for the first tool
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
@@ -571,17 +562,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Add listener for range slider value update and CSS variable
+    // This listener setup is now also included in openTab for qrTool
+    // Keep this here for initial load *if* qrTool is the default tab later
+    // But it's safer to rely on the openTab setup for the initial display.
+    /*
     if (thresholdInput) {
         const thresholdValueSpan = document.getElementById('thresholdValue');
-        const updateThresholdDisplay = () => {
-            if (thresholdValueSpan) {
-               thresholdValueSpan.textContent = thresholdInput.value;
-            }
-            thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
-        };
+        const updateThresholdDisplay = () => { ... };
         thresholdInput.addEventListener('input', updateThresholdDisplay);
-        updateThresholdDisplay(); // Set initially
+        updateThresholdDisplay();
     }
+    */
 
 
     // --- Event Listener for Convert Button (Image Tool) ---
@@ -643,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
      // --- Process Image Function (Image Tool) ---
     function processImage(img) {
-        if (!ctx || !processingCanvas || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton) {
+        if (!ctx || !processingCanvas || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton || !thresholdInput) { // Added thresholdInput check
              console.error("Missing required elements for image processing.");
              if(imageStatusMessage) imageStatusMessage.textContent = 'Internal error: Missing elements.';
              if(convertButton) convertButton.disabled = false;
@@ -654,6 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseHeight = parseInt(baseHeightInput.value) || 64;
         const zOffset = parseInt(zOffsetInput.value) || 0;
         const ditheringEnabled = ditheringEnabledInput.checked;
+         const threshold = parseInt(thresholdInput.value) || 128; // Get threshold here
 
         if (pixelRatio < 1) {
              imageStatusMessage.textContent = 'Pixels per Block must be at least 1.';
@@ -704,7 +696,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                  if (pixelA > 10) {
                      const originalColor = [pixelR, pixelG, pixelB];
-                     matchedBlock = findClosestColor(originalColor, minecraftPalette);
+                     // Pass threshold to findClosestColor
+                     matchedBlock = findClosestColor(originalColor, minecraftPalette, threshold);
 
                      finalColorForCanvas = matchedBlock.color;
 
@@ -722,7 +715,8 @@ document.addEventListener('DOMContentLoaded', () => {
                       commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
 
                  } else {
-                     matchedBlock = findClosestColor([255, 255, 255], minecraftPalette);
+                    // If pixel is transparent or very low alpha, place a white block
+                     matchedBlock = findClosestColor([255, 255, 255], minecraftPalette); // Transparent/white default matches white wool
                      finalColorForCanvas = matchedBlock.color;
                      commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
                  }
@@ -776,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- MCFunction to Nifty Building Tool NBT Converter Logic (Same as before) ---
+    // --- MCFunction to Nifty Building Tool NBT Converter Logic ---
     const nbtStatusMessage = document.getElementById('nbtStatusMessage');
     const nbtFileInput = document.getElementById('input-file');
     const nbtTitleInput = document.getElementById('nbt-title');
@@ -794,6 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
              if(nbtStatusMessage) nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.';
         }
+        // input.value = ''; // Clear file input after selection (optional)
     }
 
     function processNBTFile(file) {
@@ -928,11 +923,5 @@ document.addEventListener('DOMContentLoaded', () => {
              URL.revokeObjectURL(element.href);
         }
     }
-
-
-    // --- Initial Page Load Setup ---
-    // Open the first tab (Function Pack Creator) by default on page load
-     openTab('functionPackTool');
-
 
 });
