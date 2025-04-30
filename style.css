@@ -1,5 +1,4 @@
 /* Include Minecraft font (example) */
-/* You'll need to host this font or find a public CDN */
 @font-face {
     font-family: 'Minecraftia';
     src: url('fonts/Minecraftia.woff2') format('woff2'),
@@ -8,341 +7,280 @@
     font-style: normal;
 }
 
+:root {
+    --sidebar-width: 250px; /* Define sidebar width */
+    --hamburger-size: 40px; /* Define hamburger button size */
+    --sidebar-bg-color: #211F20; /* Accent background for sidebar */
+    --main-bg-color: #171614; /* Main background */
+    --border-color: #171614; /* Dark border color */
+    --text-color: #ffffff; /* White text */
+    --accent-color: #ffffff; /* White accent (used for active states, borders etc) */
+     --text-shadow: 2px 2px #000000; /* Simple text shadow */
+}
+
+
 body {
-    font-family: 'Minecraftia', monospace; /* Use Minecraft font, fallback to monospace */
-    background-color: #171614; /* Main background */
-    color: #ffffff; /* White text */
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Align to top */
-    min-height: 100vh;
-    padding-bottom: 40px; /* Add padding at the bottom */
-}
-
-.tab-container {
-    width: 100%;
-    max-width: 800px; /* Max width for content area */
-    margin-top: 40px;
-    background-color: #211F20; /* Accent background for container */
-    border: 4px solid #171614; /* Dark border */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    border-radius: 8px; /* Slightly rounded corners */
-    overflow: hidden;
-}
-
-.tabs {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    border-bottom: 2px solid #171614; /* Dark border below tabs */
-    background-color: rgba(0, 0, 0, 0.1); /* Slightly transparent dark for tab background */
-    border-top-left-radius: 4px; /* Match container radius */
-    border-top-right-radius: 4px; /* Match container radius */
-    flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
-}
-
-.tab-button {
-    flex-grow: 1; /* Make buttons fill available space */
-    text-align: center;
-    padding: 12px 15px;
-    cursor: pointer;
-    border: none;
-    background-color: transparent;
-    color: #a0a0a0; /* Subtle color for inactive tabs */
     font-family: 'Minecraftia', monospace;
-    font-size: 1em;
-    transition: color 0.3s ease;
-    outline: none;
-     white-space: nowrap; /* Prevent text wrapping in tab buttons */
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0; /* Remove padding here, main content handles it */
+    display: flex;
+    /* No need for flex center/start here, body just contains sidebar and main content */
+    min-height: 100vh;
+    overflow-x: hidden; /* Hide horizontal scrollbar caused by sidebar transition */
 }
 
-.tab-button:hover:not(.active) {
-    color: #ffffff; /* White on hover */
-}
-
-.tab-button.active {
-    color: #ffffff; /* White for active tab */
-    border-bottom: 3px solid #ffffff; /* White underline */
-    font-weight: bold;
-    cursor: default;
-     /* Adjust margin to make the active underline align nicely */
-     margin-bottom: -3px;
-}
-
-.tab-content {
+/* --- Sidebar and Main Content Layout --- */
+#sidebar {
+    position: fixed; /* Fixed position so it stays visible */
+    left: 0;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100%;
+    background-color: var(--sidebar-bg-color);
+    border-right: 4px solid var(--border-color);
     padding: 20px;
+    box-sizing: border-box;
+    transform: translateX(-100%); /* Start off-screen */
+    transition: transform 0.3s ease; /* Smooth slide animation */
+    z-index: 100; /* Ensure sidebar is above content */
+    display: flex; /* Use flex for column layout */
+    flex-direction: column;
+    justify-content: space-between; /* Push footer to the bottom */
+    overflow-y: auto; /* Add scrollbar if menu is too long */
 }
 
-.tab-content .container {
-     /* Remove styles from the inner container, it's just for structure now */
-    background-color: transparent;
+#sidebar.open {
+    transform: translateX(0); /* Slide in */
+}
+
+.main-content {
+    flex-grow: 1; /* Take remaining space */
+    padding: 20px; /* Add padding to the content area */
+    margin-left: 0; /* Start with no margin */
+    transition: margin-left 0.3s ease; /* Smooth shift animation */
+     /* Add margin when sidebar is open */
+    /* This is handled by JS adding a class to body or main-content */
+}
+
+body.sidebar-open .main-content {
+     margin-left: var(--sidebar-width);
+}
+
+/* --- Hamburger Icon --- */
+#hamburgerBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: var(--hamburger-size);
+    height: var(--hamburger-size);
     padding: 0;
+    background-color: var(--sidebar-bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    cursor: pointer;
+    z-index: 101; /* Ensure icon is above sidebar */
+    transition: left 0.3s ease; /* Shift icon with sidebar */
+}
+
+#hamburgerBtn .line {
+    width: 70%;
+    height: 4px;
+    background-color: var(--text-color);
+    border-radius: 2px;
+    transition: background-color 0.1s ease;
+}
+
+#hamburgerBtn:hover .line {
+    background-color: #cccccc; /* Slightly lighter on hover */
+}
+
+body.sidebar-open #hamburgerBtn {
+     left: calc(var(--sidebar-width) + 20px); /* Shift icon when sidebar is open */
+}
+
+
+/* --- Sidebar Content --- */
+.sidebar-header h2 {
+    text-align: center;
+    color: var(--accent-color);
+    text-shadow: var(--text-shadow);
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1; /* Allow menu to take available space */
+}
+
+.sidebar-menu li {
+    margin-bottom: 8px;
+}
+
+.sidebar-link {
+    /* Base button styles */
+     display: block; /* Make buttons fill list item width */
+     width: 100%;
+     padding: 10px;
+     background-color: transparent; /* Transparent background */
+     color: var(--text-color);
+     border: 2px solid transparent; /* Transparent border initially */
+     border-radius: 4px;
+     font-family: 'Minecraftia', monospace;
+     font-size: 1em;
+     text-align: left; /* Align text left */
+     cursor: pointer;
+     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+     text-shadow: none; /* Remove text shadow on sidebar links */
+}
+
+.sidebar-link:hover {
+    background-color: rgba(0, 0, 0, 0.2); /* Subtle dark hover */
+    border-color: var(--border-color);
+    color: var(--accent-color);
+}
+
+.sidebar-link:active {
+    background-color: rgba(0, 0, 0, 0.4); /* Darker when pressed */
+    border-color: var(--text-color);
+    transform: none; /* No vertical transform for sidebar links */
+}
+
+/* Style for the active sidebar link (when its section is shown) */
+/* Add a class like 'active-section' to the button via JS */
+.sidebar-link.active-section {
+     background-color: rgba(0, 0, 0, 0.3); /* Highlight background */
+     border-color: var(--accent-color); /* White border for active */
+     color: var(--accent-color); /* White text for active */
+     font-weight: bold;
+}
+
+
+.sidebar-footer {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 2px solid var(--border-color);
+    text-align: center; /* Center the settings link */
+}
+/* Style for the Settings link */
+.sidebar-footer .sidebar-link {
+     text-align: center;
+     /* Specific styles if needed, e.g., different color */
+}
+
+
+/* --- Content Sections --- */
+.content-section {
+    display: none; /* Hidden by default, shown by JS */
+}
+
+/* Home Page Specific Styles */
+#homeTool {
+     /* display: block; /* Should be set to block by JS on load */
+     text-align: center;
+     padding-top: 50px; /* Add some space from the top */
+}
+#homeTool h1 {
+     margin-bottom: 20px;
+}
+#homeTool p {
+    margin-bottom: 10px;
+     color: var(--text-color);
+     font-size: 1em;
+}
+
+
+/* Settings Page Specific Styles */
+#settingsTool {
+     /* display: block; /* Should be set to block by JS when selected */
+}
+ #settingsTool .section {
+     margin-top: 20px;
+     text-align: center; /* Center contents */
+ }
+  #settingsTool .option-group {
+      justify-content: center; /* Center options */
+  }
+   #settingsTool .option-group label {
+       min-width: 150px;
+       flex-basis: auto; /* Adjust basis */
+       margin-right: 15px;
+       margin-bottom: 0; /* Reset margin bottom */
+       text-align: left;
+   }
+   #settingsTool .option-group input[type="range"] {
+       width: 150px; /* Fixed width for sliders */
+        flex-grow: 0;
+        margin-right: 10px;
+   }
+   #settingsTool .option-group span {
+       flex-basis: auto; /* Don't force new line */
+       text-align: left;
+       margin-top: 0;
+       padding-right: 0;
+   }
+   #toggleMusicBtn {
+       margin-top: 20px;
+   }
+
+
+/* --- General Tool Section Styles (Existing, keep these) --- */
+.container {
+    /* Removed background, border, box-shadow, max-width, margin-top */
+    /* Padding is handled by .main-content */
+    background-color: transparent; /* Ensure transparent */
+    padding: 0; /* Remove padding */
     box-shadow: none;
     border: none;
     max-width: 100%;
     margin-top: 0;
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
-
 
 h1, h2, h3 {
     text-align: center;
-    color: #ffffff;
-    text-shadow: 2px 2px #000000; /* Simple text shadow */
+    color: var(--text-color);
+    text-shadow: var(--text-shadow);
 }
-h1 { margin-bottom: 10px; }
+
 h2 {
-    margin-top: 20px;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-    border-bottom: 2px solid #171614;
-    font-size: 1.2em;
-}
-h2:first-child {
-    margin-top: 0;
-}
-h3 {
-    margin-top: 15px;
-    margin-bottom: 8px;
-    font-size: 1.1em;
-}
-
-
-p {
-     text-align: center;
-     margin-bottom: 15px;
-     color: #c0c0c0;
-     font-size: 0.9em;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .section {
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 2px solid #171614;
-    background-color: rgba(0, 0, 0, 0.1); /* Slightly transparent dark */
-    border-radius: 4px;
+    border: 2px solid var(--border-color);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
-
-.form-group, .option-group {
-    margin-bottom: 15px;
-    display: flex; /* Use flexbox for layout */
-    align-items: center; /* Vertically align items */
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-}
-
-label {
-    display: block; /* Or inline-block/flex basis */
-    margin-bottom: 5px; /* Space below label if it wraps */
-    margin-right: 10px; /* Space between label and input */
-    font-weight: bold;
-    min-width: 150px; /* Give labels a minimum width */
-     flex-basis: 150px; /* Preferred width */
-     flex-shrink: 0; /* Prevent shrinking */
-}
-
-.form-group input[type="text"],
-.form-group input[type="file"],
-.option-group input[type="number"],
-.option-group input[type="text"]
-{
-    flex-grow: 1; /* Allow inputs to fill available space */
-    padding: 8px 6px;
-    border: 2px solid #171614;
-    background-color: #3a3837; /* Dark input background */
-    color: #ffffff;
-    font-family: 'Minecraftia', monospace;
-    box-sizing: border-box;
-     border-radius: 3px;
-     min-width: 100px; /* Ensure inputs don't become too small */
-     margin-bottom: 5px; /* Space below input if items wrap */
-}
-
-.form-group input[type="file"] {
-    cursor: pointer;
-}
-
-.option-group input[type="checkbox"] {
-    margin-right: 5px;
-     margin-bottom: 5px;
-     vertical-align: middle;
-     width: auto; /* Reset width */
-     flex-grow: 0;
-     flex-shrink: 0;
-}
-.option-group span {
-     font-size: 0.8em;
-     color: #c0c0c0;
-     flex-basis: 100%; /* Make helper text go below */
-     text-align: right;
-      margin-top: -10px; /* Pull it closer to the input */
-      padding-right: 5px;
-}
-.option-group input[type="checkbox"] + span {
-    flex-basis: auto; /* Let checkbox label flow naturally */
-    text-align: left;
-     margin-top: 0;
-     padding-right: 0;
-}
-
-
- /* --- START Range Input Styling (Minecraft Colors) --- */
- .option-group input[type="range"] {
-      flex-grow: 1;
-      height: 8px;
-      padding: 8px 0;
-      border: none;
-      border-radius: 10px;
-      background: transparent;
-      appearance: none;
-      outline: none;
-      margin-top: 4px;
-      margin-bottom: 4px;
-      cursor: pointer;
-      min-width: 100px; /* Ensure it doesn't disappear */
-      margin-right: 5px; /* Space before value span */
- }
-  /* Use Minecraft colors for the track fill */
- input[type="range"]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 8px;
-    background: linear-gradient(to right, #ffffff 0%, #ffffff var(--threshold-progress, 50%), #3a3837 0%); /* White fill up to var, dark after */
-    border-radius: 10px;
-    appearance: none;
- }
- input[type="range"]::-moz-range-track {
-    width: 100%;
-    height: 8px;
-    background: #3a3837; /* Dark track background */
-    border-radius: 10px;
- }
- input[type="range"]::-moz-range-progress {
-    height: 8px;
-    background: #ffffff; /* White filled part */
-    border-radius: 10px 0 0 10px;
- }
- input[type="range"]::-ms-track { /* IE/Edge */
-     width: 100%;
-     height: 8px;
-     background: transparent;
-     border-color: transparent;
-     border-width: 16px 0;
-     color: transparent;
- }
- input[type="range"]::-ms-fill-lower {
-     background: #ffffff;
-     border-radius: 10px 0 0 10px;
- }
- input[type="range"]::-ms-fill-upper {
-     background: #3a3837;
-     border-radius: 10px;
- }
-
- /* Thumb (Handle) */
- input[type="range"]::-webkit-slider-thumb,
- input[type="range"]::-moz-range-thumb,
- input[type="range']::-ms-thumb {
-    width: 20px;
-    height: 20px;
-    background: #ffffff; /* White thumb */
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    margin-top: -6px; /* Adjust to center thumb */
- }
-  input[type="range"]::-ms-thumb { /* IE/Edge */
-      margin-top: 0; /* MS thumb position differs */
-  }
-
-/* Adjust threshold value span */
-.option-group #thresholdValue {
-     flex-basis: auto; /* Don't force it to new line */
-     width: 30px; /* Fixed width for alignment */
-     text-align: center;
-     margin-bottom: 5px;
-      margin-top: 0;
-      padding-right: 0;
- }
-/* --- END Range Input Styling --- */
-
-
-.output-section {
-     margin-top: 20px;
-}
-
-textarea {
-    width: 100%;
-    height: 200px; /* Reduced height slightly */
-    padding: 10px;
-    border: 2px solid #171614;
-    background-color: #3a3837;
-    color: #ffffff;
-    font-family: 'Minecraftia', monospace;
-    resize: vertical;
-    box-sizing: border-box;
-    margin-bottom: 15px;
-    outline: none;
-    border-radius: 3px;
-    line-height: 1.5; /* Improve readability */
+input[type="text"], input[type="file"], input[type="number"], textarea {
+     border: 2px solid var(--border-color);
+     background-color: #3a3837;
+     color: var(--text-color);
+     font-family: 'Minecraftia', monospace;
 }
 textarea::placeholder {
      color: #c0c0c0;
-     opacity: 0.7;
 }
 
 
-/* Unified Button Styling */
-button {
-    display: inline-block;
-    padding: 10px 15px;
-    background-color: #4a4645; /* Base Button Color */
-    color: #ffffff;
-    border: 2px solid #171614; /* Dark Border */
-    font-family: 'Minecraftia', monospace;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-    box-sizing: border-box;
-    border-radius: 4px;
-     text-shadow: 1px 1px #000000; /* Text Shadow */
-     min-width: 100px;
-     text-align: center; /* Ensure text is centered */
-}
-
-/* Button Hover State */
-button:hover {
-    background-color: #5a5655; /* Slightly lighter on hover */
-    border-color: #ffffff; /* White border on hover */
-}
-
-/* Button Active State (Pressing) */
-button:active {
-    background-color: #3a3837; /* Darker when pressed */
-    border-color: #aaaaaa; /* Lighter border when pressed */
-    transform: translateY(1px); /* Simple press effect */
-}
-
-/* Button Disabled State */
-button:disabled {
-    background-color: #555555; /* Dark gray disabled */
-    color: #aaaaaa; /* Lighter gray text disabled */
-    border-color: #444444; /* Darker border disabled */
-    cursor: not-allowed;
-    box-shadow: none;
-    text-shadow: none;
-    transform: none; /* No press effect when disabled */
-}
-
-/* Specific styles for preset list buttons (Override some general styles) */
+/* --- Existing Button Styles (Refined) --- */
+/* Apply the unified button style defined earlier */
+/* Specific overrides for preset buttons remain */
 #presetList li button {
-    width: auto; /* Override full width */
-    padding: 4px 8px;
-    font-size: 0.9em;
-     min-width: auto;
-     margin-left: 10px;
+     /* Keep existing overrides for padding, size, min-width, margin, text-align */
      background-color: #4a4645; /* Match general button background */
      border-color: #171614; /* Match general button border */
      text-shadow: 1px 1px #000000;
@@ -355,7 +293,6 @@ button:disabled {
      background-color: #3a3837;
      border-color: #aaaaaa;
 }
-
 
 #selectedPresetsList li button {
      background-color: #c0392b; /* Red background for remove */
@@ -371,184 +308,113 @@ button:disabled {
 }
 
 
-#presetList, #selectedPresetsList {
-    list-style: none;
-    padding: 0;
-    margin-top: 10px;
-}
-
-#presetList li, #selectedPresetsList li {
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid #171614;
-    padding: 8px;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-     border-radius: 3px;
-     font-size: 0.95em;
-}
-#presetList li strong { color: #ffffff; }
-#presetList li small { color: #c0c0c0; }
-
-
-.status-message, #packStatus, #imageStatusMessage, #nbtStatusMessage { /* Combined status styles */
-    margin-top: 10px;
-    margin-bottom: 10px;
-    text-align: center;
-    color: #ffffa0; /* Yellowish color for status */
-     min-height: 1.2em;
-     font-style: italic;
-     font-size: 0.9em;
-}
-
-
+/* --- Image Tool Specifics --- */
 #imagePreview {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 15px auto 0;
-    border: 2px solid #171614; /* Dark border */
-    border-radius: 4px;
+    border: 2px solid var(--border-color);
 }
 
-/* Hide the processing canvas */
-#processingCanvas {
-    display: none;
-}
-
-
-/* Responsive Adjustments */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) { /* Adjust breakpoint for smaller screens */
+    :root {
+        --sidebar-width: 100%; /* Full width sidebar on small screens */
     }
 
-    .tab-container {
-        margin-top: 20px;
-        border-radius: 4px;
-         border-width: 2px; /* Thinner border on mobile */
+    #sidebar {
+        transform: translateX(-100%); /* Hidden by default */
+        width: var(--sidebar-width);
+        border-right: none; /* Remove right border */
+        border-bottom: 4px solid var(--border-color); /* Add bottom border */
+         padding: 15px; /* Adjust padding */
     }
-
-    .tabs {
-        flex-direction: column;
-        border-bottom: none;
-        border-top-left-radius: 2px;
-        border-top-right-radius: 2px;
-    }
-
-    .tab-button {
-         border-bottom: 1px solid rgba(23, 22, 20, 0.5); /* Darker separator */
-         border-top-left-radius: 0;
-         border-top-right-radius: 0;
-         padding: 10px 15px;
-         font-size: 0.95em;
-    }
-     .tab-button:first-child {
-         border-top-left-radius: 4px;
-          border-top-right-radius: 4px;
+     #sidebar.open {
+         transform: translateX(0); /* Slide in */
      }
-      .tab-button:last-child {
-          border-bottom: none;
-      }
 
-    .tab-button.active {
-         border-bottom: none;
-          position: relative;
-          z-index: 1;
-          margin-bottom: 0; /* Reset margin */
+    #hamburgerBtn {
+        top: 15px; /* Adjust position */
+        left: 15px; /* Adjust position */
+         background-color: var(--main-bg-color); /* Darker background */
+         border-color: var(--border-color);
+         z-index: 102; /* Ensure it's above everything */
     }
-    /* White indicator for active stacked tab */
-    .tab-button.active::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 4px; /* Thinner indicator */
-        height: 80%;
-        background-color: #ffffff; /* Active white indicator */
-         border-top-left-radius: 2px;
-         border-bottom-left-radius: 2px;
+    body.sidebar-open #hamburgerBtn {
+         left: 15px; /* Don't shift icon on small screen */
     }
 
-
-    .tab-content {
-        padding: 15px;
-    }
-
-     h1 {
-         font-size: 1.6em;
+     .main-content {
+         padding: 15px; /* Adjust padding */
+         margin-left: 0 !important; /* Ensure no margin on small screen */
+         margin-top: calc(var(--hamburger-size) + 20px); /* Add space below fixed icon */
      }
-      h2 {
-         font-size: 1.1em;
-      }
-      h3 {
-          font-size: 1em;
-      }
 
-    .section {
-        padding: 10px;
-        border-width: 1px;
+    /* Ensure sidebar covers content when open on small screens */
+    body.sidebar-open #sidebar {
+        height: 100vh; /* Cover the full viewport height */
     }
 
-
+     /* Adjust layout for form/option groups */
     .form-group, .option-group {
         flex-direction: column;
         align-items: flex-start;
-        margin-bottom: 10px;
     }
-
-    .form-group label, .option-group label {
-        margin-right: 0;
-        margin-bottom: 5px;
-        min-width: auto;
-         flex-basis: auto;
-    }
-
-     .form-group input[type="text"],
-     .form-group input[type="file"],
-     .option-group input[type="number"],
-     .option-group input[type="text"],
-     .option-group input[type="range"] {
-         width: 100%;
-         box-sizing: border-box;
+     .form-group label, .option-group label {
          margin-right: 0;
+         margin-bottom: 5px;
+         min-width: auto;
+          flex-basis: auto;
      }
-      .option-group span {
-         text-align: left;
-          padding-right: 0;
+      .form-group input[type="text"],
+      .form-group input[type="file"],
+      .option-group input[type="number"],
+      .option-group input[type="text"],
+      .option-group input[type="range"] {
+          width: 100%;
+          box-sizing: border-box;
+          margin-right: 0;
       }
-      .option-group #thresholdValue {
-           width: auto; /* Auto width for value */
-           text-align: left;
-           margin-top: 5px; /* Push below input */
-      }
-
-
-    .button-group {
-        flex-direction: column;
-        gap: 8px;
-    }
-     button {
-         width: 100%;
-          padding: 8px 10px;
-          font-size: 0.95em;
-     }
-
-     #presetList li, #selectedPresetsList li {
-          flex-direction: column;
-          align-items: flex-start;
-          padding: 6px;
-     }
-      #presetList li button {
-          margin-top: 5px;
-           margin-left: 0;
-           align-self: flex-end; /* Align button to the right */
-      }
-       #selectedPresetsList li button {
-           margin-top: 5px;
-            align-self: flex-end;
+       .option-group span {
+          text-align: left;
+           padding-right: 0;
+       }
+       .option-group #thresholdValue {
+            width: auto;
+            text-align: left;
+            margin-top: 5px;
        }
 
+     /* Adjust button group layout */
+     .button-group {
+         flex-direction: column;
+         gap: 8px;
+     }
+      button {
+          width: 100%;
+           padding: 8px 10px;
+           font-size: 0.95em;
+      }
+
+      /* Adjust preset list item layout */
+      #presetList li, #selectedPresetsList li {
+           flex-direction: column;
+           align-items: flex-start;
+           padding: 6px;
+      }
+       #presetList li button {
+           margin-top: 5px;
+            margin-left: 0;
+            align-self: flex-end; /* Align button to the right */
+       }
+        #selectedPresetsList li button {
+            margin-top: 5px;
+             align-self: flex-end;
+        }
+
+    /* Settings Specific Mobile Adjustments */
+    #settingsTool .option-group label {
+        min-width: auto; /* Override fixed width */
+        flex-basis: auto;
+    }
+    #settingsTool .option-group input[type="range"] {
+        width: 100%; /* Make sliders full width */
+    }
 }
