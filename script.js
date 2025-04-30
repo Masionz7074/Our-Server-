@@ -3,11 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Get ALL Element References FIRST ---
     // Global Elements and Navigation
-    const hamburgerBtn = document.getElementById('hamburgerBtn'); // New button
-    const sidebar = document.getElementById('sidebar'); // New sidebar nav
-    const sidebarLinks = document.querySelectorAll('#sidebar .sidebar-link'); // Links inside sidebar
-    const mainContent = document.getElementById('mainContent'); // Main content area wrapper
-    const contentSections = document.querySelectorAll('.content-section'); // All tool/home/settings divs
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarLinks = document.querySelectorAll('#sidebar .sidebar-link');
+    const mainContent = document.getElementById('mainContent');
+    const contentSections = document.querySelectorAll('.content-section');
 
     // Function Pack Creator Tool Elements
     const generateBtn = document.getElementById('generateBtn');
@@ -18,8 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedPresetsDiv = document.getElementById('selectedPresets');
     const selectedPresetsListUl = document.getElementById('selectedPresetsList');
     const packStatusDiv = document.getElementById('packStatus');
-
-    // Removed Editor Elements (references removed)
 
     // QR Code to MCFunction Tool Elements
     const imageInput = document.getElementById('imageInput');
@@ -48,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clickSound = document.getElementById('clickSound');
     const backgroundMusic = document.getElementById('backgroundMusic');
 
-    // Settings Tool Elements (New)
+    // Settings Tool Elements
     const musicVolumeInput = document.getElementById('musicVolume');
     const musicVolumeValueSpan = document.getElementById('musicVolumeValue');
     const sfxVolumeInput = document.getElementById('sfxVolume');
@@ -56,17 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleMusicBtn = document.getElementById('toggleMusicBtn');
 
 
-    // --- Set Initial Audio Volumes and State ---
+    // --- Set Initial Audio Volumes and State (Read from localStorage) ---
     if (backgroundMusic) {
-        // Use a default starting volume (e.g., 0.5 = 50%) or read from local storage later
         const savedMusicVolume = localStorage.getItem('musicVolume');
-         backgroundMusic.volume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.5; // Default to 0.5 if no saved volume
+        backgroundMusic.volume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.5; // Default to 50% if no saved volume
         backgroundMusic.pause();
         backgroundMusic.currentTime = 0;
     }
      if (clickSound) {
         const savedSfxVolume = localStorage.getItem('sfxVolume');
-         clickSound.volume = savedSfxVolume !== null ? parseFloat(savedSfxVolume) : 1.0; // Default to 1.0 if no saved volume
+         clickSound.volume = savedSfxVolume !== null ? parseFloat(savedSfxVolume) : 1.0; // Default to 100% if no saved volume
      }
 
 
@@ -75,8 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleSidebar() {
         if (sidebar) {
             sidebar.classList.toggle('open');
-             // Toggle a class on the body or main content to push it over
-             // Using body allows CSS to easily target things like fixed hamburger position
             document.body.classList.toggle('sidebar-open');
         }
     }
@@ -91,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedSection = document.getElementById(sectionId);
         if (selectedSection) {
             selectedSection.style.display = 'block';
-             // Scroll to top of the main content area when switching sections
              if (mainContent) {
-                 mainContent.scrollTop = 0;
+                 // Smooth scroll behavior might be annoying, simpler is instant scroll
+                 mainContent.scrollTo({ top: 0, behavior: 'auto' }); // Scroll to top
              }
 
             // Update active state in sidebar links
@@ -107,29 +102,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Perform setup specific to the section being shown ---
             if (sectionId === 'functionPackTool') {
-                // Render the preset lists when the function pack tab is opened/shown
                 if (presetListDiv && selectedPresetsListUl) {
                     renderPresetList();
-                    renderSelectedPresetsList(); // Ensures both lists are updated
+                    renderSelectedPresetsList();
                 }
             } else if (sectionId === 'qrTool') {
-                // Ensure the threshold slider display and CSS variable are updated
                 if (thresholdInput && thresholdValueSpan) {
                     const updateThresholdDisplay = () => {
                         thresholdValueSpan.textContent = thresholdInput.value;
                         thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
                     };
-                    updateThresholdDisplay(); // Update display immediately
+                    updateThresholdDisplay();
                 }
             } else if (sectionId === 'settingsTool') {
                  // Initialize settings UI when the settings section is shown
                  if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
-                     musicVolumeInput.value = backgroundMusic.volume; // Sync slider to current volume
-                     musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update percentage display
+                     // Ensure the slider reflects the current audio volume
+                     musicVolumeInput.value = backgroundMusic.volume;
+                     musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`;
                  }
                  if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
-                     sfxVolumeInput.value = clickSound.volume; // Sync slider to current volume
-                     sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update percentage display
+                     // Ensure the slider reflects the current audio volume
+                     sfxVolumeInput.value = clickSound.volume;
+                     sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`;
+                     // Set initial lastValue for test sound logic
+                     sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value;
                  }
                   // Update music toggle button text
                  if (toggleMusicBtn && backgroundMusic) {
@@ -141,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Close the sidebar on mobile after selecting a section
-        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) { // Check screen width
+        // Use a width check or check for the sidebar class
+        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) {
              toggleSidebar();
         }
     }
@@ -169,8 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playClickSound() {
         if (clickSound) {
             clickSound.currentTime = 0;
-            // No need to set volume here, it's set once on load/settings change
-            clickSound.play().catch(e => { /* Error ignored */ });
+            clickSound.play().catch(e => { /* Error ignored, often autoplay policy */ });
         }
     }
 
@@ -201,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
          if (backgroundMusic && musicVolumeInput && musicVolumeValueSpan) {
             backgroundMusic.volume = parseFloat(musicVolumeInput.value); // Update volume
             musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update display
-            localStorage.setItem('musicVolume', backgroundMusic.volume); // Save to local storage
+            localStorage.setItem('musicVolume', backgroundMusic.volume.toString()); // Save to local storage as string
          }
     }
 
@@ -209,19 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
          if (clickSound && sfxVolumeInput && sfxVolumeValueSpan) {
              clickSound.volume = parseFloat(sfxVolumeInput.value); // Update volume
              sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update display
-             localStorage.setItem('sfxVolume', clickSound.volume); // Save to local storage
-             // Play a quick test sound if volume is increased from 0
-             if (clickSound.volume > 0 && clickSound.volume <= 1 && sfxVolumeInput.value !== sfxVolumeInput.dataset.lastValue) {
+             localStorage.setItem('sfxVolume', clickSound.volume.toString()); // Save to local storage as string
+
+             // Play a quick test sound if volume is increased from 0 and slider position changed
+             if (clickSound.volume > 0 && sfxVolumeInput.dataset.lastValue !== sfxVolumeInput.value) {
                  playClickSound();
              }
-             sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value; // Store last value
+             sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value; // Store current value for next comparison
          }
     }
 
     function toggleMusicPlayback() {
         if (backgroundMusic && toggleMusicBtn) {
             if (backgroundMusic.paused) {
-                attemptBackgroundMusicPlayback(); // Use the attempt function to handle autoplay rules
+                // Attempt to play, which also handles autoplay rules
+                attemptBackgroundMusicPlayback();
+                // Also explicitly remove the initial attempt listeners in case the attemptBackgroundMusicPlayback promise fails later but the button click still works
+                 document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
+                 document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+
                 toggleMusicBtn.textContent = 'Pause Music';
             } else {
                 backgroundMusic.pause();
@@ -239,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hamburgerBtn.addEventListener('click', toggleSidebar);
     }
 
-    // Listeners for sidebar links using delegation on the sidebar menu and footer
+    // Listeners for sidebar links using delegation
     const sidebarMenu = document.querySelector('.sidebar-menu');
     const sidebarFooter = document.querySelector('.sidebar-footer');
 
@@ -264,15 +267,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listener to play click sound on button clicks using delegation on the body
     document.body.addEventListener('click', (event) => {
         const clickedElement = event.target;
+        // Check if the clicked element or its closest ancestor is a button, but NOT the hamburger icon itself
+        // or a link within the sidebar, or a slider input.
         const button = clickedElement.closest('button');
 
-        if (button && !button.disabled) {
+        // Check if it's a button, not disabled, and not the hamburger or a sidebar link
+        if (button && !button.disabled && button !== hamburgerBtn && !button.closest('#sidebar')) {
              // Exclude clicks on the range input element itself (thumb drag)
              if (event.target.type !== 'range') {
-                playClickSound();
+                 playClickSound();
              }
         }
+        // Optionally add sound for sidebar links separately if desired, but they are buttons so the above works
+        // if (clickedElement.closest('.sidebar-link')) {
+        //      playClickSound();
+        // }
     });
+
 
     // Add initial listeners to try playing background music on the first click or keydown
     document.body.addEventListener('click', attemptBackgroundMusicPlayback);
@@ -289,10 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
          presetsSection.addEventListener('click', handlePresetButtonClick);
     }
 
-    // --- Removed Editor Event Listeners ---
-
 
     // --- QR Code to MCFunction Tool Logic and Listeners ---
+
     if (imageInput) {
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -332,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
          };
          thresholdInput.addEventListener('input', updateThresholdDisplay);
     }
+
 
     if (convertButton) {
         convertButton.addEventListener('click', function() {
@@ -653,19 +664,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Add Event Listeners for Settings elements ---
     if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
         musicVolumeInput.addEventListener('input', handleMusicVolumeChange);
-        // Also set the initial display value
-        musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`;
+         // Initial display is set in showSection('settingsTool')
     }
      if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
         sfxVolumeInput.addEventListener('input', handleSfxVolumeChange);
-         // Also set the initial display value and last value for test sound
-        sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`;
-         sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value;
+         // Initial display and lastValue are set in showSection('settingsTool')
      }
      if (toggleMusicBtn && backgroundMusic) {
         toggleMusicBtn.addEventListener('click', toggleMusicPlayback);
-         // Set initial button text
-         toggleMusicBtn.textContent = backgroundMusic.paused ? 'Play Music' : 'Pause Music';
+         // Initial button text is set in showSection('settingsTool')
      }
 
 
