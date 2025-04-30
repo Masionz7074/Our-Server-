@@ -244,7 +244,7 @@ label {
  /* Thumb (Handle) */
  input[type="range"]::-webkit-slider-thumb,
  input[type="range"]::-moz-range-thumb,
- input[type="range"]::-ms-thumb {
+ input[type="range']::-ms-thumb {
     width: 20px;
     height: 20px;
     background: #ffffff; /* White thumb */
@@ -286,6 +286,7 @@ textarea {
     margin-bottom: 15px;
     outline: none;
     border-radius: 3px;
+    line-height: 1.5; /* Improve readability */
 }
 textarea::placeholder {
      color: #c0c0c0;
@@ -345,9 +346,37 @@ button:disabled {
 
 #selectedPresetsList li button {
      background-color: #c0392b; /* Red for remove */
+     border-color: #a02c1e;
 }
 #selectedPresetsList li button:hover {
      background-color: #e74c3c;
+     border-color: #c0392b;
+}
+
+/* Styles for the editable file list buttons */
+#editableFileList {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px; /* Space between file buttons */
+     border-bottom: 1px solid #171614; /* Separator */
+     padding-bottom: 10px;
+}
+#editableFileList button {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    background-color: rgba(0, 0, 0, 0.2); /* Subtle background */
+    border: 1px solid #171614;
+     min-width: auto;
+     text-shadow: none;
+}
+#editableFileList button:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+#editableFileList button.active {
+    background-color: #4a4645; /* Highlight active file */
+     border-color: #ffffff; /* White border for active */
+     font-weight: bold;
 }
 
 
@@ -372,9 +401,9 @@ button:disabled {
 #presetList li small { color: #c0c0c0; }
 
 
-.status-message, #packStatus { /* Combined status styles */
-    margin-top: 15px;
-    margin-bottom: 15px;
+.status-message, #packStatus, #editorStatus { /* Combined status styles */
+    margin-top: 10px; /* Reduced margin */
+    margin-bottom: 10px; /* Reduced margin */
     text-align: center;
     color: #ffffa0; /* Yellowish color for status */
      min-height: 1.2em;
@@ -531,5 +560,14 @@ button:disabled {
             align-self: flex-end;
        }
 
+     #editableFileList {
+         flex-direction: column;
+         gap: 3px;
+     }
+     #editableFileList button {
+         width: 100%;
+         text-align: left;
+         padding: 6px 10px;
+     }
 
 }
