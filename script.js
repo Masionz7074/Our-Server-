@@ -2,25 +2,24 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Get ALL Element References FIRST ---
-    // Global Elements and Tab Functionality
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
+    // Global Elements and Navigation
+    const hamburgerBtn = document.getElementById('hamburgerBtn'); // New button
+    const sidebar = document.getElementById('sidebar'); // New sidebar nav
+    const sidebarLinks = document.querySelectorAll('#sidebar .sidebar-link'); // Links inside sidebar
+    const mainContent = document.getElementById('mainContent'); // Main content area wrapper
+    const contentSections = document.querySelectorAll('.content-section'); // All tool/home/settings divs
 
     // Function Pack Creator Tool Elements
-    const generateBtn = document.getElementById('generateBtn'); // Renamed back to generateBtn
+    const generateBtn = document.getElementById('generateBtn');
     const packNameInput = document.getElementById('packName');
     const packDescriptionInput = document.getElementById('packDescription');
     const packIconInput = document.getElementById('packIcon');
-    const presetListDiv = document.getElementById('presetList'); // Div for available presets
-    const selectedPresetsDiv = document.getElementById('selectedPresets'); // The container div for selected list
-    const selectedPresetsListUl = document.getElementById('selectedPresetsList'); // The UL for selected items
+    const presetListDiv = document.getElementById('presetList');
+    const selectedPresetsDiv = document.getElementById('selectedPresets');
+    const selectedPresetsListUl = document.getElementById('selectedPresetsList');
     const packStatusDiv = document.getElementById('packStatus');
 
-    // --- Removed Editor Elements ---
-    // const fileEditorArea = document.getElementById('fileEditorArea');
-    // const editableFileListDiv = document.getElementById('editableFileList');
-    // const fileEditorTextarea = document.getElementById('fileEditor');
-    // const editorStatusDiv = document.getElementById('editorStatus');
+    // Removed Editor Elements (references removed)
 
     // QR Code to MCFunction Tool Elements
     const imageInput = document.getElementById('imageInput');
@@ -49,66 +48,105 @@ document.addEventListener('DOMContentLoaded', () => {
     const clickSound = document.getElementById('clickSound');
     const backgroundMusic = document.getElementById('backgroundMusic');
 
-    // --- Set Background Music Volume and Initial State ---
+    // Settings Tool Elements (New)
+    const musicVolumeInput = document.getElementById('musicVolume');
+    const musicVolumeValueSpan = document.getElementById('musicVolumeValue');
+    const sfxVolumeInput = document.getElementById('sfxVolume');
+    const sfxVolumeValueSpan = document.getElementById('sfxVolumeValue');
+    const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+
+
+    // --- Set Initial Audio Volumes and State ---
     if (backgroundMusic) {
-        backgroundMusic.volume = 1.0; // Set volume back to 100%
+        // Use a default starting volume (e.g., 0.5 = 50%) or read from local storage later
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+         backgroundMusic.volume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.5; // Default to 0.5 if no saved volume
         backgroundMusic.pause();
         backgroundMusic.currentTime = 0;
     }
+     if (clickSound) {
+        const savedSfxVolume = localStorage.getItem('sfxVolume');
+         clickSound.volume = savedSfxVolume !== null ? parseFloat(savedSfxVolume) : 1.0; // Default to 1.0 if no saved volume
+     }
 
 
-    // --- Global Functions (Tab Switching, Download, Sound) ---
+    // --- Global Functions (Navigation, Download, Sound) ---
 
-    function openTab(tabId) {
-        tabContents.forEach(content => {
-            content.style.display = 'none';
-        });
-
-        tabButtons.forEach(button => {
-            button.classList.remove('active');
-        });
-
-        const selectedTab = document.getElementById(tabId);
-        if (selectedTab) {
-            selectedTab.style.display = 'block';
-        } else {
-             console.error(`Tab with ID "${tabId}" not found.`);
-             return;
+    function toggleSidebar() {
+        if (sidebar) {
+            sidebar.classList.toggle('open');
+             // Toggle a class on the body or main content to push it over
+             // Using body allows CSS to easily target things like fixed hamburger position
+            document.body.classList.toggle('sidebar-open');
         }
-
-         let clickedButton = null;
-         for (const button of tabButtons) {
-             const onclickAttr = button.getAttribute('onclick');
-             if (onclickAttr && onclickAttr.includes(`openTab('${tabId}')`)) {
-                 clickedButton = button;
-                 break;
-             }
-         }
-        if (clickedButton) {
-            clickedButton.classList.add('active');
-        }
-
-         // --- Perform initial setup specific to the tab being opened ---
-         if (tabId === 'functionPackTool') {
-             if (presetListDiv && selectedPresetsListUl) {
-                 renderPresetList();
-                 renderSelectedPresetsList(); // Ensure lists are rendered when tab is active
-                 // No editor to reset anymore
-             }
-         } else if (tabId === 'qrTool') {
-             if (thresholdInput && thresholdValueSpan) {
-                 const updateThresholdDisplay = () => {
-                     thresholdValueSpan.textContent = thresholdInput.value;
-                     thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
-                 };
-                 updateThresholdDisplay();
-             }
-         } else if (tabId === 'nbtTool') {
-             // NBT tool doesn't need specific setup on tab switch
-         }
     }
 
-    // Shared Download Function
+    function showSection(sectionId) {
+        // Hide all content sections
+        contentSections.forEach(section => {
+            section.style.display = 'none';
+        });
+
+        // Show the selected section
+        const selectedSection = document.getElementById(sectionId);
+        if (selectedSection) {
+            selectedSection.style.display = 'block';
+             // Scroll to top of the main content area when switching sections
+             if (mainContent) {
+                 mainContent.scrollTop = 0;
+             }
+
+            // Update active state in sidebar links
+            sidebarLinks.forEach(link => {
+                 if (link.dataset.section === sectionId) {
+                     link.classList.add('active-section');
+                 } else {
+                     link.classList.remove('active-section');
+                 }
+            });
+
+            // --- Perform setup specific to the section being shown ---
+            if (sectionId === 'functionPackTool') {
+                // Render the preset lists when the function pack tab is opened/shown
+                if (presetListDiv && selectedPresetsListUl) {
+                    renderPresetList();
+                    renderSelectedPresetsList(); // Ensures both lists are updated
+                }
+            } else if (sectionId === 'qrTool') {
+                // Ensure the threshold slider display and CSS variable are updated
+                if (thresholdInput && thresholdValueSpan) {
+                    const updateThresholdDisplay = () => {
+                        thresholdValueSpan.textContent = thresholdInput.value;
+                        thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
+                    };
+                    updateThresholdDisplay(); // Update display immediately
+                }
+            } else if (sectionId === 'settingsTool') {
+                 // Initialize settings UI when the settings section is shown
+                 if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
+                     musicVolumeInput.value = backgroundMusic.volume; // Sync slider to current volume
+                     musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update percentage display
+                 }
+                 if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
+                     sfxVolumeInput.value = clickSound.volume; // Sync slider to current volume
+                     sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update percentage display
+                 }
+                  // Update music toggle button text
+                 if (toggleMusicBtn && backgroundMusic) {
+                     toggleMusicBtn.textContent = backgroundMusic.paused ? 'Play Music' : 'Pause Music';
+                 }
+            }
+        } else {
+             console.error(`Content section with ID "${sectionId}" not found.`);
+        }
+
+        // Close the sidebar on mobile after selecting a section
+        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) { // Check screen width
+             toggleSidebar();
+        }
+    }
+
+    // Shared Download Function (Same as before)
     function download(filename, textOrBlob) {
         const element = document.createElement('a');
         if (textOrBlob instanceof Blob) {
@@ -127,11 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Sound on Click Logic
+    // Sound on Click Logic (Uses clickSound volume)
     function playClickSound() {
         if (clickSound) {
             clickSound.currentTime = 0;
-            clickSound.play().catch(e => {});
+            // No need to set volume here, it's set once on load/settings change
+            clickSound.play().catch(e => { /* Error ignored */ });
         }
     }
 
@@ -143,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     console.log("Background music started.");
+                    // Music is playing, remove these specific listeners
                     document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
                     document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
                 }).catch(error => {
@@ -156,27 +196,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Settings Functionality ---
+    function handleMusicVolumeChange() {
+         if (backgroundMusic && musicVolumeInput && musicVolumeValueSpan) {
+            backgroundMusic.volume = parseFloat(musicVolumeInput.value); // Update volume
+            musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update display
+            localStorage.setItem('musicVolume', backgroundMusic.volume); // Save to local storage
+         }
+    }
+
+    function handleSfxVolumeChange() {
+         if (clickSound && sfxVolumeInput && sfxVolumeValueSpan) {
+             clickSound.volume = parseFloat(sfxVolumeInput.value); // Update volume
+             sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update display
+             localStorage.setItem('sfxVolume', clickSound.volume); // Save to local storage
+             // Play a quick test sound if volume is increased from 0
+             if (clickSound.volume > 0 && clickSound.volume <= 1 && sfxVolumeInput.value !== sfxVolumeInput.dataset.lastValue) {
+                 playClickSound();
+             }
+             sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value; // Store last value
+         }
+    }
+
+    function toggleMusicPlayback() {
+        if (backgroundMusic && toggleMusicBtn) {
+            if (backgroundMusic.paused) {
+                attemptBackgroundMusicPlayback(); // Use the attempt function to handle autoplay rules
+                toggleMusicBtn.textContent = 'Pause Music';
+            } else {
+                backgroundMusic.pause();
+                console.log("Background music paused.");
+                toggleMusicBtn.textContent = 'Play Music';
+            }
+        }
+    }
+
 
     // --- Add Global Event Listeners ---
 
-    // Add event listeners for tab buttons
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const onclickAttr = button.getAttribute('onclick');
-            const match = onclickAttr.match(/openTab\('(.+?)'\)/);
-            if (match && match[1]) {
-                const tabId = match[1];
-                openTab(tabId);
+    // Listener for the hamburger button
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', toggleSidebar);
+    }
+
+    // Listeners for sidebar links using delegation on the sidebar menu and footer
+    const sidebarMenu = document.querySelector('.sidebar-menu');
+    const sidebarFooter = document.querySelector('.sidebar-footer');
+
+    if (sidebarMenu) {
+        sidebarMenu.addEventListener('click', (event) => {
+            const linkButton = event.target.closest('.sidebar-link');
+            if (linkButton && linkButton.dataset.section) {
+                showSection(linkButton.dataset.section);
             }
         });
-    });
+    }
+     if (sidebarFooter) {
+        sidebarFooter.addEventListener('click', (event) => {
+            const linkButton = event.target.closest('.sidebar-link');
+            if (linkButton && linkButton.dataset.section) {
+                showSection(linkButton.dataset.section);
+            }
+        });
+    }
 
-    // Add event listener to play click sound on button clicks using delegation
+
+    // Add event listener to play click sound on button clicks using delegation on the body
     document.body.addEventListener('click', (event) => {
         const clickedElement = event.target;
         const button = clickedElement.closest('button');
 
         if (button && !button.disabled) {
+             // Exclude clicks on the range input element itself (thumb drag)
              if (event.target.type !== 'range') {
                 playClickSound();
              }
@@ -188,265 +279,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('keydown', attemptBackgroundMusicPlayback);
 
 
-    // --- Function Pack Creator Tool Logic and Listeners ---
-    // State variables (only selected presets remain)
-    let selectedPresetIds = new Set();
-
-    // Preset Definitions (Same as before)
-    const allPresets = [
-        { id: 'coords_to_score', name: 'Coords to Scores', description: 'Stores player X, Y, Z coordinates into scoreboard objectives each tick.', objectives: [{ name: "coordX", type: "dummy" }, { name: "coordY", type: "dummy" }, { name: "coordZ", type: "dummy" }], setup_commands: [], main_commands: ['# Store player coordinates in scores', 'execute as @a store result score @s coordX run data get entity @s Pos[0] 100', 'execute as @a store result score @s coordY run data get entity @s Pos[1] 100', 'execute as @a store result score @s coordZ run data get entity @s Pos[2] 100'], additional_files: [] },
-        { id: 'on_death', name: 'On Player Death', description: 'Detects player deaths using deathCount and runs a function.', objectives: [{ name: "deaths", type: "deathCount" }], setup_commands: [], main_commands: ['# Check for players who have died', 'execute as @a[scores={deaths=1..}] run function <pack_namespace>:on_death_action'], additional_files: [{ filename: "on_death_action.mcfunction", content: "# This function runs when a player dies.\n# Add your commands here.\n# Example: Send a message\ntellraw @s {\"text\":\"You died!\",\"color\":\"red\"}\n\n# IMPORTANT: Reset the death score\nscoreboard players set @s deaths 0" }] },
-        { id: 'on_first_join', name: 'On First Join', description: 'Runs a function when a player joins the world for the first time.', objectives: [{ name: "has_joined", type: "dummy" }], setup_commands: [], main_commands: ['# Check for players who have just joined', 'execute as @a unless score @s has_joined matches 1 run function <pack_namespace>:on_first_join_action', '# Mark players as having joined', 'scoreboard players set @a[scores={has_joined=..0}] has_joined 1'], additional_files: [{ filename: "on_first_join_action.mcfunction", content: "# This function runs on a player's first join.\n# Add commands here.\n# Example: Send a welcome message\ntellraw @s {\"text\":\"Welcome to the world!\",\"color\":\"gold\"}" }] }
-    ];
-
-
-    // Helper Functions for Function Pack Creator
-
-    function renderPresetList() {
-        if (!presetListDiv) return;
-        presetListDiv.innerHTML = '';
-        allPresets.forEach(preset => {
-            if (!selectedPresetIds.has(preset.id)) {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>
-                        <strong>${preset.name}</strong><br>
-                        <small>${preset.description}</small>
-                    </span>
-                    <button data-preset-id="${preset.id}" data-action="add">Add</button>
-                `;
-                presetListDiv.appendChild(li);
-            }
-        });
-    }
-
-    function renderSelectedPresetsList() {
-        if (!selectedPresetsListUl || !selectedPresetsDiv) return;
-        selectedPresetsListUl.innerHTML = '';
-         selectedPresetIds.forEach(presetId => {
-            const preset = allPresets.find(p => p.id === presetId);
-            if (preset) {
-                 const li = document.createElement('li');
-                 li.innerHTML = `
-                     <span>${preset.name}</span>
-                     <button data-preset-id="${preset.id}" data-action="remove">Remove</button>
-                 `;
-                 selectedPresetsListUl.appendChild(li);
-            }
-         });
-         renderPresetList();
-         // No editor to reset anymore
-    }
-
-    function handlePresetButtonClick(event) {
-        const button = event.target.closest('#presetList li button, #selectedPresetsList li button');
-        if (!button || !button.dataset.action || !button.dataset.presetId) return;
-
-        const presetId = button.dataset.presetId;
-        const action = button.dataset.action;
-
-        if (action === 'add') {
-            selectedPresetIds.add(presetId);
-        } else if (action === 'remove') {
-            selectedPresetIds.delete(presetId);
-        }
-
-        renderSelectedPresetsList();
-    }
-
-    function generateUUID() {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-            return crypto.randomUUID();
-        }
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    function sanitizeNamespace(name) {
-        return name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/__+/g, '_').replace(/^_|_$/g, '');
-    }
-
-    // --- Refactored Generation Logic (No Editor) ---
-    async function generatePack() {
-         if (!generateBtn || !packStatusDiv || !packNameInput || !packDescriptionInput || !packIconInput) {
-             console.error("Missing required elements for pack generation. Cannot proceed.");
-             if(packStatusDiv) packStatusDiv.textContent = 'Error generating pack: Missing page elements.';
-              if(generateBtn) generateBtn.disabled = false;
-             return;
-         }
-
-        generateBtn.disabled = true; // Disable button while generating
-        if(packStatusDiv) packStatusDiv.textContent = 'Generating pack...';
-
-        const packName = packNameInput.value.trim() || 'My Function Pack';
-        const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool';
-        const packIconFile = packIconInput.files[0];
-        const packNamespace = sanitizeNamespace(packName) || 'my_pack';
-
-
-        // --- Assemble All File Contents Directly ---
-
-        // manifest.json
-        const manifestUuid = generateUUID();
-        const moduleUuid = generateUUID();
-        const manifestContent = JSON.stringify({
-            "format_version": 2,
-            "header": {
-                "name": packName,
-                "description": packDescription,
-                "uuid": manifestUuid,
-                "version": [1, 0, 0],
-                "min_engine_version": [1, 16, 0]
-            },
-            "modules": [
-                {
-                    "type": "data",
-                    "uuid": moduleUuid,
-                    "version": [1, 0, 0]
-                }
-            ]
-        }, null, 4);
-
-        // tick.json
-        const tickJsonContent = JSON.stringify({
-             "values": [
-                `${packNamespace}:main`
-             ]
-        }, null, 4);
-
-        // main.mcfunction, objectives.mcfunction, setup.mcfunction, and additional files
-        const mainCommands = [
-            `# Function pack: ${packName}`,
-            `# Namespace: ${packNamespace}`,
-            '',
-            '# --- Setup & Objectives ---',
-            `function ${packNamespace}:setup`, // Run setup once on pack load (or on first tick)
-            `function ${packNamespace}:objectives`, // Ensure objectives are added
-            '',
-            '# --- Tick Commands (Runs every tick via tick.json) ---',
-            '# Add your custom tick commands below this line',
-            ''
-        ];
-
-        const requiredObjectives = new Map();
-        const requiredSetupCommands = new Set();
-        const additionalFilesMap = new Map(); // Use a map to store additional file contents
-
-        selectedPresetIds.forEach(presetId => {
-            const preset = allPresets.find(p => p.id === presetId);
-            if (preset) {
-                preset.objectives.forEach(obj => requiredObjectives.set(obj.name, obj));
-                preset.setup_commands.forEach(cmd => requiredSetupCommands.add(cmd));
-                mainCommands.push('');
-                mainCommands.push(`# --- Preset: ${preset.name} ---`);
-                preset.main_commands.forEach(cmd => {
-                     mainCommands.push(cmd.replace(/<pack_namespace>/g, packNamespace));
-                });
-                 preset.additional_files.forEach(file => {
-                    // Store additional files by their intended full path within the namespace
-                     const fullPath = `${packNamespace}/${file.filename}`;
-                      if (additionalFilesMap.has(fullPath)) {
-                         console.warn(`Duplicate additional file generated: ${fullPath}. Content is being overwritten.`);
-                      }
-                     additionalFilesMap.set(fullPath, file.content.replace(/<pack_namespace>/g, packNamespace));
-                 });
-            }
-        });
-
-         requiredObjectives.set('objectives', {name: 'objectives', type: 'dummy'});
-
-         const objectiveCommands = [
-             `# Automatically added objectives for pack: ${packName}`,
-             '# Ensure objectives are added only if they don\'t exist (requires a player online).',
-             '',
-             ...Array.from(requiredObjectives.keys()).sort().map(objName => {
-                 const obj = requiredObjectives.get(objName);
-                 return `execute as @a at @s unless score @s "${obj.name}" objectives matches 0 run scoreboard objectives add "${obj.name}" ${obj.type}`;
-             })
-         ];
-
-         const setupCommands = [
-             `# Setup commands for pack: ${packName}`,
-              '# This function runs once when the pack is loaded/enabled (typically via main.mcfunction on first tick).',
-              '',
-              ...Array.from(requiredSetupCommands).sort()
-         ];
-
-         // Add the core files to the map for zipping
-         const allFunctionFiles = new Map([
-             [`${packNamespace}/main.mcfunction`, mainCommands.join('\n')],
-             [`${packNamespace}/objectives.mcfunction`, objectiveCommands.join('\n')],
-             [`${packNamespace}/setup.mcfunction`, setupCommands.join('\n')],
-             ...additionalFilesMap // Spread the additional files into this map
-         ]);
-
-
-        // --- Create Zip File ---
-        const zip = new JSZip();
-
-        zip.file("manifest.json", manifestContent);
-
-        if (packIconFile) {
-             try {
-                 const iconData = await packIconFile.arrayBuffer();
-                 zip.file("pack_icon.png", iconData);
-             } catch (error) {
-                 if(packStatusDiv) packStatusDiv.textContent = `Error reading pack icon: ${error}`;
-                 console.error("Error reading pack icon:", error);
-                 generateBtn.disabled = false;
-                 return;
-             }
-        }
-
-        const functionsFolder = zip.folder("functions");
-        functionsFolder.file("tick.json", tickJsonContent);
-
-        // Add all generated function files
-        allFunctionFiles.forEach((content, relativePath) => {
-            zip.file(`functions/${relativePath}`, content);
-        });
-
-
-        // --- Generate and Download the Zip File ---
-        zip.generateAsync({ type: "blob" })
-            .then(function(content) {
-                download(`${packName}.zip`, content);
-
-                if(packStatusDiv) packStatusDiv.textContent = 'Pack generated and downloaded successfully!';
-                generateBtn.disabled = false;
-
-            })
-            .catch(function(error) {
-                if(packStatusDiv) packStatusDiv.textContent = `Error generating pack: ${error}`;
-                generateBtn.disabled = false;
-                console.error("Error generating zip:", error);
-            });
-    }
-
-
     // --- Add Event Listeners for Function Pack tab elements ---
     if (generateBtn) {
         generateBtn.addEventListener('click', generatePack);
-        // The generate button is enabled by default in HTML
     }
 
-    // Event delegation on the parent div for preset add/remove buttons
     const presetsSection = document.querySelector('.presets.section');
     if(presetsSection) {
          presetsSection.addEventListener('click', handlePresetButtonClick);
     }
 
-
     // --- Removed Editor Event Listeners ---
-    // if (prepareFilesBtn) prepareFilesBtn.addEventListener('click', prepareFilesForEditing);
-    // if (editableFileListDiv) { ... }
-    // if (fileEditorTextarea) { ... }
 
 
     // --- QR Code to MCFunction Tool Logic and Listeners ---
-
     if (imageInput) {
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -486,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
          };
          thresholdInput.addEventListener('input', updateThresholdDisplay);
     }
-
 
     if (convertButton) {
         convertButton.addEventListener('click', function() {
@@ -675,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- MCFunction to Nifty Building Tool NBT Converter Logic and Listeners ---
+    // --- MCFunction to Nifty Building Tool NBT Logic and Listeners ---
 
     if (nbtFileInput) {
         nbtFileInput.addEventListener('change', getNBTFile);
@@ -805,8 +650,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Initial Page Load: Open Default Tab ---
-     openTab('functionPackTool');
+    // --- Add Event Listeners for Settings elements ---
+    if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
+        musicVolumeInput.addEventListener('input', handleMusicVolumeChange);
+        // Also set the initial display value
+        musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`;
+    }
+     if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
+        sfxVolumeInput.addEventListener('input', handleSfxVolumeChange);
+         // Also set the initial display value and last value for test sound
+        sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`;
+         sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value;
+     }
+     if (toggleMusicBtn && backgroundMusic) {
+        toggleMusicBtn.addEventListener('click', toggleMusicPlayback);
+         // Set initial button text
+         toggleMusicBtn.textContent = backgroundMusic.paused ? 'Play Music' : 'Pause Music';
+     }
+
+
+    // --- Initial Page Load: Show Default Section ---
+     showSection('homeTool');
 
 
 }); // End of DOMContentLoaded listener
