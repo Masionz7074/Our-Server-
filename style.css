@@ -1,3 +1,9 @@
+
+
+
+
+
+
 /* Reset some default browser styles */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -585,6 +591,7 @@ button:disabled {
 }
 
 /* Add a class to the canvas when it contains a processed image for styling */
+/* This helps distinguish it from the potentially initially invisible canvas */
 .pixel-preview {
      border: var(--border-thin); /* Match preview border */
      border-radius: var(--minecraft-border-radius);
