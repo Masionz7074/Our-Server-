@@ -1,4 +1,4 @@
-// Wait for the DOM to be fully loaded
+/ Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Global Elements and Tab Functionality ---
@@ -28,8 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clickedButton.classList.add('active');
         }
 
-         // Trigger any initialization needed for the opened tab
-         // (Currently handled by DOMContentLoaded, but useful for dynamic content)
+         // No specific initialization needed for tabs currently, handled by DOMContentLoaded
     }
 
     // Add event listeners for tab buttons
@@ -42,16 +41,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Function Pack Creator Tool Logic ---
-    const generatePackBtn = document.getElementById('generatePackBtn'); // Renamed ID
+    const prepareFilesBtn = document.getElementById('prepareFilesBtn'); // New button
+    const generateAndDownloadPackBtn = document.getElementById('generateAndDownloadPackBtn'); // Renamed button
     const packNameInput = document.getElementById('packName');
     const packDescriptionInput = document.getElementById('packDescription');
     const packIconInput = document.getElementById('packIcon');
     const presetListDiv = document.getElementById('presetList');
     const selectedPresetsListUl = document.getElementById('selectedPresetsList');
-    const packStatusDiv = document.getElementById('packStatus'); // Renamed ID
+    const packStatusDiv = document.getElementById('packStatus');
+
+    // Elements for the new editor area
+    const fileEditorArea = document.getElementById('fileEditorArea');
+    const editableFileListDiv = document.getElementById('editableFileList');
+    const fileEditorTextarea = document.getElementById('fileEditor');
+    const editorStatusDiv = document.getElementById('editorStatus');
 
 
-    // --- Preset Definitions ---
+    // --- Preset Definitions (Same as before) ---
     const allPresets = [
         {
             id: 'coords_to_score',
@@ -114,10 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add more presets here
     ];
 
+    // State for Function Pack Creator
     let selectedPresetIds = new Set();
+    // Map to store the content of files that can be edited (path -> content string)
+    let editableFiles = new Map();
+    let currentEditingFile = null; // Track which file is currently in the textarea
+
+
+    // --- Helper Functions for Function Pack Creator ---
 
     function renderPresetList() {
-        if (!presetListDiv) return; // Check if element exists (only in func pack tab)
+        if (!presetListDiv) return;
         presetListDiv.innerHTML = '';
         allPresets.forEach(preset => {
             if (!selectedPresetIds.has(preset.id)) {
@@ -127,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${preset.name}</strong><br>
                         <small>${preset.description}</small>
                     </span>
-                    <button data-preset-id="${preset.id}">Add</button>
+                    <button data-preset-id="${preset.id}" data-action="add">Add</button>
                 `;
                 presetListDiv.appendChild(li);
             }
@@ -135,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSelectedPresetsList() {
-        if (!selectedPresetsListUl) return; // Check if element exists
+        if (!selectedPresetsListUl) return;
         selectedPresetsListUl.innerHTML = '';
          selectedPresetIds.forEach(presetId => {
             const preset = allPresets.find(p => p.id === presetId);
@@ -143,12 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
                  const li = document.createElement('li');
                  li.innerHTML = `
                      <span>${preset.name}</span>
-                     <button data-preset-id="${preset.id}">Remove</button>
+                     <button data-preset-id="${preset.id}" data-action="remove">Remove</button>
                  `;
                  selectedPresetsListUl.appendChild(li);
             }
          });
          renderPresetList(); // Re-render available list
+         // Hide editor area and disable download button when presets change
+         resetEditorArea();
     }
 
     function handlePresetButtonClick(event) {
@@ -156,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!button) return;
 
         const presetId = button.dataset.presetId;
-        const action = button.textContent.trim().toLowerCase();
+        const action = button.dataset.action;
 
         if (action === 'add') {
             selectedPresetIds.add(presetId);
@@ -178,23 +193,212 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function sanitizeNamespace(name) {
-        return name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/__+/g, '_').replace(/^_|_$/g, ''); // lowercase, replace non-alphanumeric/underscore with underscore, remove leading/trailing/duplicate underscores
+        return name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/__+/g, '_').replace(/^_|_$/g, '');
     }
 
-    async function generatePack() {
-        if (!packStatusDiv || !packNameInput || !packDescriptionInput || !packIconInput || !generatePackBtn) return; // Ensure elements exist
+    // --- Editor Management ---
 
-        packStatusDiv.textContent = 'Generating pack...';
-        generatePackBtn.disabled = true;
+    function resetEditorArea() {
+        if (!fileEditorArea || !fileEditorTextarea || !editableFileListDiv || !editorStatusDiv || !generateAndDownloadPackBtn || !prepareFilesBtn) return;
+        fileEditorArea.style.display = 'none';
+        editableFiles.clear();
+        currentEditingFile = null;
+        fileEditorTextarea.value = '';
+        editableFileListDiv.innerHTML = '';
+        editorStatusDiv.textContent = 'Select a file to edit.';
+        generateAndDownloadPackBtn.disabled = true;
+        prepareFilesBtn.disabled = false;
+         if(packStatusDiv) packStatusDiv.textContent = '';
+    }
+
+    function renderEditableFileList() {
+        if (!editableFileListDiv || !editorStatusDiv) return;
+        editableFileListDiv.innerHTML = '';
+        if (editableFiles.size === 0) {
+            editorStatusDiv.textContent = 'No .mcfunction files were generated.';
+            return;
+        }
+
+        editorStatusDiv.textContent = 'Click a file to edit:';
+
+        // Add buttons for each editable file
+        editableFiles.forEach((content, filename) => {
+            const button = document.createElement('button');
+            button.textContent = filename;
+            button.dataset.filename = filename;
+            if (filename === currentEditingFile) {
+                button.classList.add('active');
+            }
+            editableFileListDiv.appendChild(button);
+        });
+    }
+
+    function loadFileIntoEditor(filename) {
+        if (!fileEditorTextarea || !editableFiles.has(filename) || !editableFileListDiv || !editorStatusDiv) return;
+
+        // Save current editor content if a file was being edited
+        if (currentEditingFile && fileEditorTextarea) {
+             editableFiles.set(currentEditingFile, fileEditorTextarea.value);
+        }
+
+        // Load new file content
+        currentEditingFile = filename;
+        fileEditorTextarea.value = editableFiles.get(filename);
+        editorStatusDiv.textContent = `Editing: ${filename}`;
+
+        // Update button highlighting
+        editableFileListDiv.querySelectorAll('button').forEach(button => {
+            button.classList.remove('active');
+        });
+        const activeButton = editableFileListDiv.querySelector(`button[data-filename="${filename}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+
+        // Focus the textarea
+        fileEditorTextarea.focus();
+    }
+
+    // Save editor content back to the map as user types
+    function handleEditorInput() {
+        if (currentEditingFile && fileEditorTextarea && editableFiles.has(currentEditingFile)) {
+            editableFiles.set(currentEditingFile, fileEditorTextarea.value);
+        }
+    }
+
+
+    // --- File Preparation Logic ---
+
+    function prepareFilesForEditing() {
+         if (!prepareFilesBtn || !packNameInput || !packDescriptionInput || !packStatusDiv || !fileEditorArea || !generateAndDownloadPackBtn) {
+             console.error("Missing required elements for file preparation.");
+             return;
+         }
+
+        prepareFilesBtn.disabled = true;
+        if(packStatusDiv) packStatusDiv.textContent = 'Preparing files...';
+        resetEditorArea(); // Reset editor area state first
+
+        const packName = packNameInput.value.trim() || 'My Function Pack';
+        const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool';
+        const packNamespace = sanitizeNamespace(packName) || 'my_pack';
+
+         // --- Assemble Default File Contents ---
+
+        const mainCommands = [
+            `# Function pack: ${packName}`,
+            `# Namespace: ${packNamespace}`,
+            '',
+            '# --- Setup & Objectives ---',
+            `function ${packNamespace}:setup`, // Run setup once on pack load (or on first tick)
+            `function ${packNamespace}:objectives`, // Ensure objectives are added
+            '',
+            '# --- Tick Commands (Runs every tick via tick.json) ---',
+            '# Add your custom tick commands below this line',
+            ''
+        ];
+
+        const requiredObjectives = new Map(); // Use Map to store unique objectives by name
+        const requiredSetupCommands = new Set();
+        const additionalPresetFiles = []; // Store additional files defined by presets
+
+        selectedPresetIds.forEach(presetId => {
+            const preset = allPresets.find(p => p.id === presetId);
+            if (preset) {
+                preset.objectives.forEach(obj => requiredObjectives.set(obj.name, obj));
+                preset.setup_commands.forEach(cmd => requiredSetupCommands.add(cmd));
+                mainCommands.push('');
+                mainCommands.push(`# --- Preset: ${preset.name} ---`);
+                preset.main_commands.forEach(cmd => {
+                     mainCommands.push(cmd.replace(/<pack_namespace>/g, packNamespace));
+                });
+                 preset.additional_files.forEach(file => {
+                     additionalPresetFiles.push({
+                        filename: file.filename,
+                        content: file.content.replace(/<pack_namespace>/g, packNamespace)
+                     });
+                 });
+            }
+        });
+
+         // Add the dummy 'objectives' objective needed for the Bedrock scoreboard check trick
+         requiredObjectives.set('objectives', {name: 'objectives', type: 'dummy'});
+
+
+         // Construct objectives.mcfunction content
+         const objectiveCommands = [
+             `# Automatically added objectives for pack: ${packName}`,
+             '# Ensure objectives are added only if they don\'t exist (requires a player online).',
+             '',
+             // Sort objectives alphabetically for consistent output
+             ...Array.from(requiredObjectives.keys()).sort().map(objName => {
+                 const obj = requiredObjectives.get(objName);
+                 // Use `execute as @a at @s` to target a player context, which is necessary for /scoreboard objectives add
+                 return `execute as @a at @s unless score @s ${obj.name} objectives matches 0 run scoreboard objectives add ${obj.name} ${obj.type}`;
+             })
+         ];
+
+         // Construct setup.mcfunction content
+         const setupCommands = [
+             `# Setup commands for pack: ${packName}`,
+              '# This function runs once when the pack is loaded/enabled (typically via main.mcfunction on first tick).',
+              '',
+              ...Array.from(requiredSetupCommands).sort() // Sort setup commands too
+         ];
+
+
+        // --- Store Content for Editing ---
+         editableFiles.set('main.mcfunction', mainCommands.join('\n'));
+         editableFiles.set('objectives.mcfunction', objectiveCommands.join('\n'));
+         editableFiles.set('setup.mcfunction', setupCommands.join('\n'));
+
+         // Add additional files from presets to the editable list
+         additionalPresetFiles.forEach(file => {
+            // Prefix with namespace to reflect folder structure
+             editableFiles.set(`${packNamespace}/${file.filename}`, file.content);
+         });
+
+
+        // --- Show Editor Area and Load First File ---
+         fileEditorArea.style.display = 'block';
+         renderEditableFileList();
+
+         // Load the first file (main.mcfunction is a good default)
+         if (editableFiles.size > 0) {
+             loadFileIntoEditor('main.mcfunction'); // Assuming main.mcfunction always exists
+         } else {
+              // Should not happen with core files, but good fallback
+             editorStatusDiv.textContent = 'No editable files were generated.';
+             if (fileEditorTextarea) fileEditorTextarea.value = '';
+         }
+
+
+        // --- Finalize Preparation ---
+        if(packStatusDiv) packStatusDiv.textContent = 'Files are ready for editing.';
+        generateAndDownloadPackBtn.disabled = false; // Enable download button
+        prepareFilesBtn.disabled = false; // Re-enable prepare button (can re-prepare)
+
+    }
+
+    // --- Generation and Download Logic ---
+    async function generateAndDownloadPack() {
+         if (!generateAndDownloadPackBtn || !packStatusDiv || !packNameInput || !packDescriptionInput || !packIconInput || !editableFiles) {
+             console.error("Missing required elements for pack generation.");
+             return;
+         }
+
+        generateAndDownloadPackBtn.disabled = true;
+        if(packStatusDiv) packStatusDiv.textContent = 'Generating zip pack...';
 
         const packName = packNameInput.value.trim() || 'My Function Pack';
         const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool';
         const packIconFile = packIconInput.files[0];
-        const packNamespace = sanitizeNamespace(packName) || 'my_pack'; // Default namespace if name results in empty string
+        const packNamespace = sanitizeNamespace(packName) || 'my_pack';
 
         const manifestUuid = generateUUID();
         const moduleUuid = generateUUID();
 
+        // manifest.json - Not editable via UI
         const manifestContent = JSON.stringify({
             "format_version": 2,
             "header": {
@@ -213,82 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ]
         }, null, 4);
 
+        // tick.json - Not editable via UI
         const tickJsonContent = JSON.stringify({
              "values": [
                 `${packNamespace}:main`
              ]
         }, null, 4);
-
-        const mainCommands = [
-            `# Function pack: ${packName}`,
-            `# Namespace: ${packNamespace}`,
-            '',
-            '# --- Setup & Objectives ---',
-            `function ${packNamespace}:setup`, // Run setup once on pack load (or on first tick if setup doesn't handle it)
-            `function ${packNamespace}:objectives`, // Ensure objectives are added
-            '',
-            '# --- Tick Commands (Runs every tick) ---',
-            '# Add your custom tick commands here',
-            ''
-        ];
-
-        const requiredObjectives = new Map(); // Use Map to store unique objectives by name
-        const requiredSetupCommands = new Set();
-        const additionalFiles = [];
-
-        selectedPresetIds.forEach(presetId => {
-            const preset = allPresets.find(p => p.id === presetId);
-            if (preset) {
-                preset.objectives.forEach(obj => requiredObjectives.set(obj.name, obj));
-                preset.setup_commands.forEach(cmd => requiredSetupCommands.add(cmd));
-                mainCommands.push('');
-                mainCommands.push(`# --- Preset: ${preset.name} ---`);
-                preset.main_commands.forEach(cmd => {
-                     mainCommands.push(cmd.replace(/<pack_namespace>/g, packNamespace));
-                });
-                 preset.additional_files.forEach(file => {
-                     additionalFiles.push({
-                        filename: file.filename,
-                        content: file.content.replace(/<pack_namespace>/g, packNamespace)
-                     });
-                 });
-            }
-        });
-
-         // Construct objectives.mcfunction content
-         const objectiveCommands = [
-             `# Automatically added objectives for pack: ${packName}`,
-             '# Ensure objectives are added only if they don\'t exist.',
-             '# Requires a player to be online when run.',
-             '' // Add newline
-         ];
-         requiredObjectives.forEach(obj => {
-             // This check is slightly more robust than just testing for @p having the score
-             objectiveCommands.push(`execute as @a at @s unless score @s ${obj.name} objectives matches 0 run scoreboard objectives add ${obj.name} ${obj.type}`);
-             // A perfect check would need `/scoreboard objectives list`, but its output is hard to parse in commands.
-             // This `execute unless score ... objectives matches 0` is a common workaround.
-             // The dummy objective 'objectives' is needed for this trick - add it if not present.
-             requiredObjectives.set('objectives', {name: 'objectives', type: 'dummy'}); // Ensure the 'objectives' dummy objective is included
-         });
-          // Rebuild objectiveCommands after potentially adding 'objectives' dummy
-         const finalObjectiveCommands = [
-             `# Automatically added objectives for pack: ${packName}`,
-             '# Ensure objectives are added only if they don\'t exist.',
-             '# Requires a player to be online when run.',
-             ''
-         ];
-         requiredObjectives.forEach(obj => {
-             finalObjectiveCommands.push(`execute as @a at @s unless score @s ${obj.name} objectives matches 0 run scoreboard objectives add ${obj.name} ${obj.type}`);
-         });
-
-
-         // Construct setup.mcfunction content
-         const setupCommands = [
-             `# Setup commands for pack: ${packName}`,
-              '# This function runs once when the pack is loaded/enabled (typically via main.mcfunction on first tick).',
-              '' // Add newline
-         ];
-         requiredSetupCommands.forEach(cmd => setupCommands.push(cmd));
 
 
         // --- Create Zip File ---
@@ -297,76 +431,91 @@ document.addEventListener('DOMContentLoaded', () => {
         zip.file("manifest.json", manifestContent);
 
         if (packIconFile) {
-            // Need to convert File object to Blob or ArrayBuffer for JSZip if not directly supported
-             const reader = new FileReader();
-             reader.onload = function(event) {
-                 zip.file("pack_icon.png", event.target.result); // Add as ArrayBuffer
-                 finalizeZipAndDownload(zip, packName, packStatusDiv, generatePackBtn);
-             };
-             reader.onerror = function(error) {
-                 packStatusDiv.textContent = `Error reading pack icon: ${error}`;
-                 generatePackBtn.disabled = false;
-                 console.error("Error reading file:", error);
-             };
-             reader.readAsArrayBuffer(packIconFile); // Read the file
-
-        } else {
-             // No icon, finalize and download immediately
-             finalizeZipAndDownload(zip, packName, packStatusDiv, generatePackBtn);
+            // Add pack icon asynchronously
+             try {
+                 const iconData = await packIconFile.arrayBuffer(); // Read file content
+                 zip.file("pack_icon.png", iconData);
+             } catch (error) {
+                 if(packStatusDiv) packStatusDiv.textContent = `Error reading pack icon: ${error}`;
+                 console.error("Error reading pack icon:", error);
+                 generateAndDownloadPackBtn.disabled = false;
+                 return; // Stop generation if icon fails
+             }
         }
 
-         function finalizeZipAndDownload(zipObj, name, statusEl, btnEl) {
-             // Create the functions folder and namespace subfolder
-             const functionsFolder = zipObj.folder("functions");
-             const namespaceFolder = functionsFolder.folder(packNamespace);
+        // Create the functions folder and namespace subfolder
+        const functionsFolder = zip.folder("functions");
+        const namespaceFolder = functionsFolder.folder(packNamespace);
 
-             // Add core function files
-             functionsFolder.file("tick.json", tickJsonContent);
-             namespaceFolder.file("main.mcfunction", mainCommands.join('\n'));
-             namespaceFolder.file("objectives.mcfunction", finalObjectiveCommands.join('\n')); // Use the finalized list
-             namespaceFolder.file("setup.mcfunction", setupCommands.join('\n'));
+        // Add tick.json
+        functionsFolder.file("tick.json", tickJsonContent);
 
-             // Add additional files from presets
-             additionalFiles.forEach(file => {
-                  namespaceFolder.file(file.filename, file.content);
-             });
+        // Add editable files from the map
+        editableFiles.forEach((content, filename) => {
+            // Need to handle files inside the namespace folder vs outside (tick.json)
+            // Our filenames in the map are already relative to functions/
+            // If they contain the namespace, put them inside, otherwise at functions/
+             if (filename.startsWith(packNamespace + '/')) {
+                 // Remove namespace prefix for path inside the namespace folder
+                 const pathInsideNamespace = filename.substring(packNamespace.length + 1);
+                 namespaceFolder.file(pathInsideNamespace, content);
+             } else {
+                 // Files like tick.json (which isn't in editableFiles anyway) or future files at functions/
+                 // This case is less likely with the current editable files (main, objectives, setup)
+                 functionsFolder.file(filename, content);
+             }
+        });
 
 
-             // Generate and Download
-             zipObj.generateAsync({ type: "blob" })
-                 .then(function(content) {
-                     const link = document.createElement('a');
-                     link.href = URL.createObjectURL(content);
-                     link.download = `${name}.zip`;
-                     link.click();
+        // --- Generate and Download ---
+        zip.generateAsync({ type: "blob" })
+            .then(function(content) {
+                // Using the shared download function
+                download(`${packName}.zip`, content);
 
-                     statusEl.textContent = 'Pack generated successfully!';
-                     btnEl.disabled = false;
-                     URL.revokeObjectURL(link.href); // Clean up
-                 })
-                 .catch(function(error) {
-                     statusEl.textContent = `Error generating pack: ${error}`;
-                     btnEl.disabled = false;
-                     console.error("Error generating zip:", error);
-                 });
-         }
+                if(packStatusDiv) packStatusDiv.textContent = 'Pack generated and downloaded successfully!';
+                generateAndDownloadPackBtn.disabled = false;
+
+            })
+            .catch(function(error) {
+                if(packStatusDiv) packStatusDiv.textContent = `Error generating pack: ${error}`;
+                generateAndDownloadPackBtn.disabled = false;
+                console.error("Error generating zip:", error);
+            });
     }
 
 
     // Add event listeners for Function Pack tab
-    if (generatePackBtn) generatePackBtn.addEventListener('click', generatePack);
-    if (presetListDiv) presetListDiv.addEventListener('click', handlePresetButtonClick);
-    if (selectedPresetsListUl) selectedPresetsListUl.addEventListener('click', handlePresetButtonClick);
+    if (prepareFilesBtn) prepareFilesBtn.addEventListener('click', prepareFilesForEditing);
+    if (generateAndDownloadPackBtn) generateAndDownloadPackBtn.addEventListener('click', generateAndDownloadPack);
+    if (presetListDiv) presetListDiv.addEventListener('click', handlePresetButtonClick); // Delegation for Add/Remove
+    if (editableFileListDiv) {
+         // Delegation for file selection buttons
+         editableFileListDiv.addEventListener('click', function(event) {
+             const button = event.target.closest('button');
+             if (button && button.dataset.filename) {
+                 loadFileIntoEditor(button.dataset.filename);
+             }
+         });
+    }
+    if (fileEditorTextarea) {
+         // Listen for input to save changes as user types
+         fileEditorTextarea.addEventListener('input', handleEditorInput);
+          // Optional: save on blur too, might be less frequent but guarantees save
+          // fileEditorTextarea.addEventListener('blur', handleEditorInput);
+    }
+
+
      // Initial render for function pack presets
     if (presetListDiv) renderPresetList();
 
 
-    // --- QR Code to MCFunction Tool Logic ---
+    // --- QR Code to MCFunction Tool Logic (Same as before) ---
     // Get element references for the first tool
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
     const processingCanvas = document.getElementById('processingCanvas');
-    const ctx = processingCanvas ? processingCanvas.getContext('2d') : null; // Check if canvas exists
+    const ctx = processingCanvas ? processingCanvas.getContext('2d') : null;
     const convertButton = document.getElementById('convertButton');
     const outputCommands = document.getElementById('outputCommands');
     const copyButton = document.getElementById('copyButton');
@@ -377,16 +526,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseHeightInput = document.getElementById('baseHeight');
     const zOffsetInput = document.getElementById('zOffset');
     const ditheringEnabledInput = document.getElementById('ditheringEnabled');
-    const thresholdInput = document.getElementById('threshold'); // Threshold input
+    const thresholdInput = document.getElementById('threshold');
 
      // --- Minecraft Block Color Palette (Only Black Concrete and White Wool) ---
     const minecraftPalette = [
-         { id: 'minecraft:black_concrete', color: [18, 20, 26] }, // Using actual block color values
+         { id: 'minecraft:black_concrete', color: [18, 20, 26] },
          { id: 'minecraft:white_wool', color: [242, 242, 242] }
     ];
 
     // --- Event Listener for File Input (Image Tool) ---
-    if (imageInput) { // Add check
+    if (imageInput) {
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
@@ -426,29 +575,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const thresholdValueSpan = document.getElementById('thresholdValue');
         const updateThresholdDisplay = () => {
             if (thresholdValueSpan) {
-               thresholdValueSpan.textContent = thresholdInput.value; // Update display
+               thresholdValueSpan.textContent = thresholdInput.value;
             }
-            // Update the CSS variable for Webkit track fill
             thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
         };
         thresholdInput.addEventListener('input', updateThresholdDisplay);
-        // Also set it once on load
-        updateThresholdDisplay();
+        updateThresholdDisplay(); // Set initially
     }
 
 
     // --- Event Listener for Convert Button (Image Tool) ---
-    if (convertButton) { // Add check
+    if (convertButton) {
         convertButton.addEventListener('click', function() {
-            if (!imagePreview || !imagePreview.src || imagePreview.src === '#') {
-                if(imageStatusMessage) imageStatusMessage.textContent = 'No image loaded.';
+            if (!imagePreview || !imagePreview.src || imagePreview.src === '#' || !ctx || !processingCanvas) {
+                if(imageStatusMessage) imageStatusMessage.textContent = 'No image loaded or canvas not available.';
                 return;
             }
-             if (!ctx || !processingCanvas) {
-                 if(imageStatusMessage) imageStatusMessage.textContent = 'Internal error: Canvas not available.';
-                 console.error("Canvas or context is null");
-                 return;
-             }
 
             if (imageStatusMessage) imageStatusMessage.textContent = 'Converting...';
             if (convertButton) convertButton.disabled = true;
@@ -464,12 +606,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (imageStatusMessage) imageStatusMessage.textContent = 'Error loading image for processing.';
                 if (convertButton) convertButton.disabled = false;
             };
-            img.src = imagePreview.src; // Use the data URL from the preview
+            img.src = imagePreview.src;
         });
     }
 
-
-     // --- Helper Function to Find Closest Color in Palette (Image Tool) ---
+     // --- Helper Function to Find Closest Color (Image Tool) ---
     function findClosestColor(pixelColor, palette) {
         const black = palette[0];
         const white = palette[1];
@@ -478,7 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const g = pixelColor[1];
         const b = pixelColor[2];
 
-        // Simple luminance calculation for B&W
         const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
          const threshold = parseInt(document.getElementById('threshold').value) || 128;
 
@@ -493,7 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
      function diffuseError(workingPixels, width, height, px, py, er, eg, eb, weight) {
          if (px >= 0 && px < width && py >= 0 && py < height) {
              const idx = (py * width + px) * 4;
-             // Only apply error to pixels that are not fully transparent
              if (workingPixels[idx + 3] > 10) {
                  workingPixels[idx] = Math.max(0, Math.min(255, workingPixels[idx] + er * weight));
                  workingPixels[idx + 1] = Math.max(0, Math.min(255, workingPixels[idx + 1] + eg * weight));
@@ -528,7 +667,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const imageData = ctx.getImageData(0, 0, img.width, img.height);
         const pixels = imageData.data;
-        // Create a writable copy if dithering is enabled
         const workingPixels = ditheringEnabled ? new Uint8ClampedArray(pixels) : pixels;
 
 
@@ -542,12 +680,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-         // Clear canvas and resize it to match the output block dimensions for the preview
          ctx.clearRect(0, 0, processingCanvas.width, processingCanvas.height);
         processingCanvas.width = outputWidth;
         processingCanvas.height = outputHeight;
-         ctx.fillStyle = '#1a1a1a'; // Fill background with a dark color
-         ctx.fillRect(0, 0, outputWidth, outputHeight); // Fill the background
+         ctx.fillStyle = '#1a1a1a';
+         ctx.fillRect(0, 0, outputWidth, outputHeight);
 
 
         for (let y = 0; y < outputHeight; y++) {
@@ -555,32 +692,27 @@ document.addEventListener('DOMContentLoaded', () => {
                  const startPixelX = x * pixelRatio;
                  const startPixelY = y * pixelRatio;
 
-                 // Get the color of the top-left pixel in the current block area
-                 // This is a simplification; averaging colors in the block area would be better but more complex.
-                 // For QR codes and B&W, the top-left pixel is usually representative.
                  const pixelIndex = (startPixelY * img.width + startPixelX) * 4;
                  const pixelR = workingPixels[pixelIndex];
                  const pixelG = workingPixels[pixelIndex + 1];
                  const pixelB = workingPixels[pixelIndex + 2];
-                 const pixelA = workingPixels[pixelIndex + 3]; // Get alpha
+                 const pixelA = workingPixels[pixelIndex + 3];
 
 
                  let matchedBlock = null;
-                 let finalColorForCanvas = [0, 0, 0]; // Default for drawing
+                 let finalColorForCanvas = [0, 0, 0];
 
-                 if (pixelA > 10) { // Only process if the pixel is mostly opaque
-                     const originalColor = [pixelR, pixelG, pixelB]; // Use workingPixels color if dithering
+                 if (pixelA > 10) {
+                     const originalColor = [pixelR, pixelG, pixelB];
                      matchedBlock = findClosestColor(originalColor, minecraftPalette);
 
-                     finalColorForCanvas = matchedBlock.color; // Use the block's color for canvas preview
+                     finalColorForCanvas = matchedBlock.color;
 
                      if (ditheringEnabled) {
-                         // Calculate error based on the original pixel color and the chosen block color
                          let errorR = originalColor[0] - matchedBlock.color[0];
                          let errorG = originalColor[1] - matchedBlock.color[1];
                          let errorB = originalColor[2] - matchedBlock.color[2];
 
-                         // Apply Floyd-Steinberg error diffusion to surrounding pixels
                          diffuseError(workingPixels, img.width, img.height, startPixelX + 1, startPixelY, errorR, errorG, errorB, 7 / 16);
                          diffuseError(workingPixels, img.width, img.height, startPixelX - 1, startPixelY + 1, errorR, errorG, errorB, 3 / 16);
                          diffuseError(workingPixels, img.width, img.height, startPixelX, startPixelY + 1, errorR, errorG, errorB, 5 / 16);
@@ -590,7 +722,6 @@ document.addEventListener('DOMContentLoaded', () => {
                       commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
 
                  } else {
-                    // If pixel is transparent or very low alpha, place a white block
                      matchedBlock = findClosestColor([255, 255, 255], minecraftPalette);
                      finalColorForCanvas = matchedBlock.color;
                      commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
@@ -598,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
                  ctx.fillStyle = `rgb(${finalColorForCanvas[0]}, ${finalColorForCanvas[1]}, ${finalColorForCanvas[2]})`;
-                 ctx.fillRect(x, y, 1, 1); // Draw a 1x1 pixel on the output canvas grid
+                 ctx.fillRect(x, y, 1, 1);
             }
         }
 
@@ -610,7 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Copy Button Functionality (Image Tool) ---
-    if (copyButton) { // Add check
+    if (copyButton) {
         copyButton.addEventListener('click', function() {
             if (!outputCommands) return;
             outputCommands.select();
@@ -631,7 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Download Button Functionality (Image Tool) ---
-    if (downloadButton) { // Add check
+    if (downloadButton) {
          downloadButton.addEventListener('click', function() {
              if (!outputCommands || !imageStatusMessage) return;
              const textToSave = outputCommands.value;
@@ -639,39 +770,33 @@ document.addEventListener('DOMContentLoaded', () => {
                  imageStatusMessage.textContent = 'No commands to download.';
                  return;
              }
-             // Using the shared download function at the end of the script
              download('pixel_art.mcfunction', textToSave);
              imageStatusMessage.textContent = 'Downloaded pixel_art.mcfunction';
          });
     }
 
 
-    // --- MCFunction to Nifty Building Tool NBT Converter Logic ---
-    const nbtStatusMessage = document.getElementById('nbtStatusMessage'); // Get reference to the new status element
-    const nbtFileInput = document.getElementById('input-file'); // Get ref to the input file element
+    // --- MCFunction to Nifty Building Tool NBT Converter Logic (Same as before) ---
+    const nbtStatusMessage = document.getElementById('nbtStatusMessage');
+    const nbtFileInput = document.getElementById('input-file');
     const nbtTitleInput = document.getElementById('nbt-title');
     const commandsPerNpcInput = document.getElementById('commands-per-npc');
 
-
-    // Entry point for choosing a file (MCFunction Tool) - event listener on its specific input
-    if (nbtFileInput) { // Add check
-        nbtFileInput.addEventListener('change', getNBTFile); // Renamed function to avoid conflict
+    if (nbtFileInput) {
+        nbtFileInput.addEventListener('change', getNBTFile);
     }
 
-
-    function getNBTFile(event) { // Renamed function
+    function getNBTFile(event) {
         const input = event.target;
         if ('files' in input && input.files.length > 0) {
              if(nbtStatusMessage) nbtStatusMessage.textContent = 'Reading file...';
-             processNBTFile(input.files[0]); // Renamed function call
+             processNBTFile(input.files[0]);
         } else {
              if(nbtStatusMessage) nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.';
         }
-        // input.value = ''; // Clearing input might prevent selecting the same file again immediately if needed
     }
 
-    // Meat-and-potatoes logic (MCFunction Tool)
-    function processNBTFile(file) { // Renamed function
+    function processNBTFile(file) {
          if(!nbtStatusMessage || !nbtTitleInput || !commandsPerNpcInput) {
              console.error("Missing NBT tool elements");
              if(nbtStatusMessage) nbtStatusMessage.textContent = 'Internal error: Missing elements.';
@@ -679,11 +804,11 @@ document.addEventListener('DOMContentLoaded', () => {
          }
 
          nbtStatusMessage.textContent = 'Processing commands...';
-        readFileContent(file).then(content => { // Keep readFileContent same name
-            const commands = getUsefulCommands(content); // Keep getUsefulCommands same name
+        readFileContent(file).then(content => {
+            const commands = getUsefulCommands(content);
 
             if (commands.length === 0) {
-                 nbtStatusMessage.textContent = 'No setblock, fill, or summon commands found in the file.';
+                 nbtStatusMessage.textContent = 'No setblock, fill, summon, or structure commands found in the file.';
                  return;
             }
 
@@ -692,19 +817,17 @@ document.addEventListener('DOMContentLoaded', () => {
             let file_name;
             if (nbt_name === "") {
                 file_name = "NiftyBuildingTool_Output.txt";
-                nbt_name = "Unnamed Build" // Use default name for NBT data too
+                nbt_name = "Unnamed Build"
             } else {
-                // Clean up file name to be safer for file systems
                 file_name = "NiftyBuildingTool_" + nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "") + ".txt";
             }
             if (isNaN(commands_per_npc) || commands_per_npc <= 0) {
                 commands_per_npc = 346;
-                 if (commandsPerNpcInput) commandsPerNpcInput.value = 346; // Update the input field too if it exists
+                 if (commandsPerNpcInput) commandsPerNpcInput.value = 346;
             }
 
             let curSec = 0;
-            // Cleaning for NBT string content happens inside these opener functions now
-            let NBTdata = getBlockOpener(nbt_name); // Keep getBlockOpener same name
+            let NBTdata = getBlockOpener(nbt_name);
             let NPCCount = Math.ceil(commands.length / commands_per_npc);
 
              nbtStatusMessage.textContent = `Generating NBT for ${commands.length} commands across ${NPCCount} NPCs...`;
@@ -714,7 +837,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 let NPCCommandList = commands.slice(i, i + commands_per_npc);
                 let nextNPC = (curSec === NPCCount ? 1 : curSec + 1);
 
-                // Clean name for tag/tickingarea ONLY
                 const cleanNbtNameForTag = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "");
 
                 NPCCommandList.unshift(`/tickingarea add circle ~ ~ ~ 4 NIFTYBUILDINGTOOL_${cleanNbtNameForTag}`);
@@ -724,19 +846,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 NPCCommandList.push(`/kill @s`);
 
-                NBTdata += getNPCOpener(curSec, nbt_name); // Keep getNPCOpener same name
-                NBTdata += NPCCommandList.map(x => commandToNBT(x.trim())).join(","); // Keep commandToNBT same name
-                NBTdata += getNPCCloser(); // Keep getNPCCloser same name
+                NBTdata += getNPCOpener(curSec, nbt_name);
+                NBTdata += NPCCommandList.map(x => commandToNBT(x.trim())).join(",");
+                NBTdata += getNPCCloser();
 
                 if (curSec < NPCCount) {
                   NBTdata += ",";
                 }
             }
-            NBTdata += getBlockCloser(); // Keep getBlockCloser same name
+            NBTdata += getBlockCloser();
 
              nbtStatusMessage.textContent = 'Download starting...';
-            // Using the shared download function
-            download(file_name, NBTdata); // Keep download same name
+            download(file_name, NBTdata);
 
              nbtStatusMessage.textContent = `Successfully generated and downloaded ${file_name}.`;
         }).catch(error => {
@@ -745,7 +866,6 @@ document.addEventListener('DOMContentLoaded', () => {
          });
     }
 
-    // Keep these helper functions as they were, they are only called by NBT logic
     function readFileContent(file) {
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
@@ -757,15 +877,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getUsefulCommands(content) {
         return content.split('\n').map(x => x.replace(/^\s*\//, "").trim()).filter(x => {
-            // Added 'structure' command as it's also used in building
-            return x.length > 0 && (x.startsWith("setblock") || x.startsWith("fill") || x.startsWith("summon") || x.startsWith("structure"));
+            return x.length > 0 && !x.startsWith("#") && (x.startsWith("setblock") || x.startsWith("fill") || x.startsWith("summon") || x.startsWith("structure"));
         });
     }
 
     function getBlockOpener(nbt_name) {
-        // Escape quotes and newlines for display strings (Lore and Name)
         const escapedNbtNameForDisplay = nbt_name.replace(/"/g, '\\"').replace(/\n/g, '\\n');
-        // Original Lore had \\n, preserving that structure but adding name to it
         return `{Block:{name:"minecraft:moving_block",states:{},version:17959425},Count:1b,Damage:0s,Name:"minecraft:moving_block",WasPickedUp:0b,tag:{display:{Lore:["Created using the Nifty Building Tool\\\\nBy Brutus314 and Clawsky123.\\\\n\\\\nÂ§gÂ§l${escapedNbtNameForDisplay}"],Name:"Â§gÂ§l${escapedNbtNameForDisplay}"},movingBlock:{name:"minecraft:sea_lantern",states:{},version:17879555},movingEntity:{Occupants:[`;
     }
 
@@ -774,9 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getNPCOpener(section, nbt_name) {
-         // Clean name for tag (alphanumeric, hyphen, underscore)
          const cleanedNbtNameForTag = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "");
-         // Escape quotes and backslashes for JSON string content
          const escapedNbtNameForJSON = nbt_name.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
 
         return `{ActorIdentifier:"minecraft:npc<>",SaveData:{Persistent:1b,Pos:[],Variant:18,definitions:["+minecraft:npc"],RawtextName:"${escapedNbtNameForJSON}",CustomName:"${escapedNbtNameForJSON}",CustomNameVisible:1b,Tags:["${cleanedNbtNameForTag}${section}","NiftyBuildingTool"],Actions:"[{\\"button_name\\" : \\"Build Section ${section}\\",\\"data\\" : [`;
@@ -789,21 +904,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function commandToNBT(command) {
         const jsonCommand = JSON.stringify({
             cmd_line : command,
-            cmd_ver : 12 // Using version 12
+            cmd_ver : 12
         });
-        // Escape the resulting JSON string for the 'data' field in the NBT 'Actions' string
         return jsonCommand.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`);
     }
 
 
     // --- Shared Download Function ---
-    // This function is used by all tools
-    function download(filename, textOrBlob) { // Can accept text or Blob
+    function download(filename, textOrBlob) {
         const element = document.createElement('a');
-         // If it's a Blob (like from JSZip), use createObjectURL
         if (textOrBlob instanceof Blob) {
              element.setAttribute('href', URL.createObjectURL(textOrBlob));
-        } else { // Otherwise assume text
+        } else {
              element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(textOrBlob));
         }
         element.setAttribute('download', filename);
@@ -812,7 +924,6 @@ document.addEventListener('DOMContentLoaded', () => {
         element.click();
         document.body.removeChild(element);
 
-         // Clean up the URL object if it was created
         if (textOrBlob instanceof Blob) {
              URL.revokeObjectURL(element.href);
         }
