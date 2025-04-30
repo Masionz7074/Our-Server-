@@ -7,19 +7,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContents = document.querySelectorAll('.tab-content');
 
     // Function Pack Creator Tool Elements
-    const prepareFilesBtn = document.getElementById('prepareFilesBtn');
-    const generateAndDownloadPackBtn = document.getElementById('generateAndDownloadPackBtn');
+    const generateBtn = document.getElementById('generateBtn'); // Renamed back to generateBtn
     const packNameInput = document.getElementById('packName');
     const packDescriptionInput = document.getElementById('packDescription');
     const packIconInput = document.getElementById('packIcon');
-    const presetListDiv = document.getElementById('presetList');
-    const selectedPresetsDiv = document.getElementById('selectedPresets');
-    const selectedPresetsListUl = document.getElementById('selectedPresetsList');
+    const presetListDiv = document.getElementById('presetList'); // Div for available presets
+    const selectedPresetsDiv = document.getElementById('selectedPresets'); // The container div for selected list
+    const selectedPresetsListUl = document.getElementById('selectedPresetsList'); // The UL for selected items
     const packStatusDiv = document.getElementById('packStatus');
-    const fileEditorArea = document.getElementById('fileEditorArea');
-    const editableFileListDiv = document.getElementById('editableFileList');
-    const fileEditorTextarea = document.getElementById('fileEditor');
-    const editorStatusDiv = document.getElementById('editorStatus');
+
+    // --- Removed Editor Elements ---
+    // const fileEditorArea = document.getElementById('fileEditorArea');
+    // const editableFileListDiv = document.getElementById('editableFileList');
+    // const fileEditorTextarea = document.getElementById('fileEditor');
+    // const editorStatusDiv = document.getElementById('editorStatus');
 
     // QR Code to MCFunction Tool Elements
     const imageInput = document.getElementById('imageInput');
@@ -46,11 +47,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Audio Elements
     const clickSound = document.getElementById('clickSound');
-    const backgroundMusic = document.getElementById('backgroundMusic'); // Reference to background music audio tag
+    const backgroundMusic = document.getElementById('backgroundMusic');
 
-    // --- Set Background Music Volume ---
-    if (backgroundMusic) { // Check if the element was found
-        backgroundMusic.volume = 0.6; // Set volume to 60%
+    // --- Set Background Music Volume and Initial State ---
+    if (backgroundMusic) {
+        backgroundMusic.volume = 1.0; // Set volume back to 100%
+        backgroundMusic.pause();
+        backgroundMusic.currentTime = 0;
     }
 
 
@@ -89,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
          if (tabId === 'functionPackTool') {
              if (presetListDiv && selectedPresetsListUl) {
                  renderPresetList();
-                 renderSelectedPresetsList();
-                 resetEditorArea();
+                 renderSelectedPresetsList(); // Ensure lists are rendered when tab is active
+                 // No editor to reset anymore
              }
          } else if (tabId === 'qrTool') {
              if (thresholdInput && thresholdValueSpan) {
@@ -128,34 +131,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function playClickSound() {
         if (clickSound) {
             clickSound.currentTime = 0;
-            clickSound.play().catch(e => {}); // Catch and ignore errors silently
+            clickSound.play().catch(e => {});
         }
     }
 
     // Background Music Playback Attempt Logic
-    let musicAttempted = false; // Flag to ensure we only try once
-
     function attemptBackgroundMusicPlayback() {
-        if (backgroundMusic && !musicAttempted) { // Check if element exists and we haven't tried yet
-            musicAttempted = true; // Mark that we've tried
+        if (backgroundMusic && backgroundMusic.paused) {
             const playPromise = backgroundMusic.play();
 
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     console.log("Background music started.");
-                    // Music is playing, remove listeners
                     document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
                     document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
                 }).catch(error => {
                     console.warn("Background music autoplay blocked or failed:", error);
-                    // Music didn't start, maybe show a "Play Music" button?
-                    // If not, listeners remain, and next interaction will try again
-                    musicAttempted = false; // Allow retrying on next interaction
                 });
             } else {
-                 // Older browsers without Promise support for play()
                  console.log("Attempted background music play (no promise returned).");
-                 // Assume it played, remove listeners
                  document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
                  document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
             }
@@ -195,11 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Function Pack Creator Tool Logic and Listeners ---
-    // State variables
+    // State variables (only selected presets remain)
     let selectedPresetIds = new Set();
-    let editableFiles = new Map();
-    let currentEditingFile = null;
-
 
     // Preset Definitions (Same as before)
     const allPresets = [
@@ -244,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
          });
          renderPresetList();
-         resetEditorArea();
+         // No editor to reset anymore
     }
 
     function handlePresetButtonClick(event) {
@@ -277,104 +268,62 @@ document.addEventListener('DOMContentLoaded', () => {
         return name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/__+/g, '_').replace(/^_|_$/g, '');
     }
 
-    // Editor Management
-
-    function resetEditorArea() {
-        if (!fileEditorArea || !fileEditorTextarea || !editableFileListDiv || !editorStatusDiv || !generateAndDownloadPackBtn || !prepareFilesBtn) {
-             return;
-        }
-        fileEditorArea.style.display = 'none';
-        editableFiles.clear();
-        currentEditingFile = null;
-        fileEditorTextarea.value = '';
-        editableFileListDiv.innerHTML = '';
-        editorStatusDiv.textContent = 'Select a file to edit.';
-        generateAndDownloadPackBtn.disabled = true;
-        prepareFilesBtn.disabled = false;
-         if(packStatusDiv) packStatusDiv.textContent = '';
-    }
-
-    function renderEditableFileList() {
-        if (!editableFileListDiv || !editorStatusDiv) return;
-        editableFileListDiv.innerHTML = '';
-
-        if (editableFiles.size === 0) {
-            editorStatusDiv.textContent = 'No .mcfunction files were generated.';
-            return;
-        }
-
-        editorStatusDiv.textContent = 'Click a file to edit:';
-
-        const sortedFilenames = Array.from(editableFiles.keys()).sort();
-
-        sortedFilenames.forEach(filename => {
-            const button = document.createElement('button');
-            button.textContent = filename;
-            button.dataset.filename = filename;
-            if (filename === currentEditingFile) {
-                button.classList.add('active');
-            }
-            editableFileListDiv.appendChild(button);
-        });
-    }
-
-    function loadFileIntoEditor(filename) {
-        if (!fileEditorTextarea || !editableFiles.has(filename) || !editableFileListDiv || !editorStatusDiv) {
-             console.warn("Attempted to load file into editor before all elements are available or file missing:", filename);
-             return;
-        }
-
-        if (currentEditingFile && fileEditorTextarea) {
-             editableFiles.set(currentEditingFile, fileEditorTextarea.value);
-        }
-
-        currentEditingFile = filename;
-        fileEditorTextarea.value = editableFiles.get(filename);
-        editorStatusDiv.textContent = `Editing: functions/${filename}`;
-
-        editableFileListDiv.querySelectorAll('button').forEach(button => {
-            button.classList.remove('active');
-        });
-        const activeButton = editableFileListDiv.querySelector(`button[data-filename="${filename}"]`);
-        if (activeButton) {
-            activeButton.classList.add('active');
-        }
-
-        fileEditorTextarea.focus();
-        fileEditorTextarea.scrollTop = 0;
-    }
-
-    function handleEditorInput() {
-        if (currentEditingFile && fileEditorTextarea && editableFiles.has(currentEditingFile)) {
-            editableFiles.set(currentEditingFile, fileEditorTextarea.value);
-        }
-    }
-
-    // File Preparation Logic
-    function prepareFilesForEditing() {
-         if (!prepareFilesBtn || !packNameInput || !packDescriptionInput || !packStatusDiv || !fileEditorArea || !generateAndDownloadPackBtn || !editableFileListDiv || !fileEditorTextarea || !editorStatusDiv) {
-             console.error("Missing required elements for file preparation. Cannot proceed.");
-             if(packStatusDiv) packStatusDiv.textContent = 'Error preparing files: Missing page elements.';
-              if(prepareFilesBtn) prepareFilesBtn.disabled = false;
+    // --- Refactored Generation Logic (No Editor) ---
+    async function generatePack() {
+         if (!generateBtn || !packStatusDiv || !packNameInput || !packDescriptionInput || !packIconInput) {
+             console.error("Missing required elements for pack generation. Cannot proceed.");
+             if(packStatusDiv) packStatusDiv.textContent = 'Error generating pack: Missing page elements.';
+              if(generateBtn) generateBtn.disabled = false;
              return;
          }
 
-        prepareFilesBtn.disabled = true;
-        if(packStatusDiv) packStatusDiv.textContent = 'Preparing files...';
-        resetEditorArea();
+        generateBtn.disabled = true; // Disable button while generating
+        if(packStatusDiv) packStatusDiv.textContent = 'Generating pack...';
 
         const packName = packNameInput.value.trim() || 'My Function Pack';
         const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool';
+        const packIconFile = packIconInput.files[0];
         const packNamespace = sanitizeNamespace(packName) || 'my_pack';
 
 
+        // --- Assemble All File Contents Directly ---
+
+        // manifest.json
+        const manifestUuid = generateUUID();
+        const moduleUuid = generateUUID();
+        const manifestContent = JSON.stringify({
+            "format_version": 2,
+            "header": {
+                "name": packName,
+                "description": packDescription,
+                "uuid": manifestUuid,
+                "version": [1, 0, 0],
+                "min_engine_version": [1, 16, 0]
+            },
+            "modules": [
+                {
+                    "type": "data",
+                    "uuid": moduleUuid,
+                    "version": [1, 0, 0]
+                }
+            ]
+        }, null, 4);
+
+        // tick.json
+        const tickJsonContent = JSON.stringify({
+             "values": [
+                `${packNamespace}:main`
+             ]
+        }, null, 4);
+
+        // main.mcfunction, objectives.mcfunction, setup.mcfunction, and additional files
         const mainCommands = [
             `# Function pack: ${packName}`,
             `# Namespace: ${packNamespace}`,
             '',
             '# --- Setup & Objectives ---',
-            `function ${packNamespace}:setup`,
-            `function ${packNamespace}:objectives`,
+            `function ${packNamespace}:setup`, // Run setup once on pack load (or on first tick)
+            `function ${packNamespace}:objectives`, // Ensure objectives are added
             '',
             '# --- Tick Commands (Runs every tick via tick.json) ---',
             '# Add your custom tick commands below this line',
@@ -383,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const requiredObjectives = new Map();
         const requiredSetupCommands = new Set();
-        const additionalPresetFiles = [];
+        const additionalFilesMap = new Map(); // Use a map to store additional file contents
 
         selectedPresetIds.forEach(presetId => {
             const preset = allPresets.find(p => p.id === presetId);
@@ -396,10 +345,12 @@ document.addEventListener('DOMContentLoaded', () => {
                      mainCommands.push(cmd.replace(/<pack_namespace>/g, packNamespace));
                 });
                  preset.additional_files.forEach(file => {
-                     additionalPresetFiles.push({
-                        filename: file.filename,
-                        content: file.content.replace(/<pack_namespace>/g, packNamespace)
-                     });
+                    // Store additional files by their intended full path within the namespace
+                     const fullPath = `${packNamespace}/${file.filename}`;
+                      if (additionalFilesMap.has(fullPath)) {
+                         console.warn(`Duplicate additional file generated: ${fullPath}. Content is being overwritten.`);
+                      }
+                     additionalFilesMap.set(fullPath, file.content.replace(/<pack_namespace>/g, packNamespace));
                  });
             }
         });
@@ -423,85 +374,13 @@ document.addEventListener('DOMContentLoaded', () => {
               ...Array.from(requiredSetupCommands).sort()
          ];
 
-
-        // --- Store Content for Editing ---
-         editableFiles.set(`${packNamespace}/main.mcfunction`, mainCommands.join('\n'));
-         editableFiles.set(`${packNamespace}/objectives.mcfunction`, objectiveCommands.join('\n'));
-         editableFiles.set(`${packNamespace}/setup.mcfunction`, setupCommands.join('\n'));
-
-         additionalPresetFiles.forEach(file => {
-             const fullPath = `${packNamespace}/${file.filename}`;
-             if (editableFiles.has(fullPath)) {
-                 console.warn(`Duplicate editable file generated: ${fullPath}. Content is being overwritten.`);
-             }
-             editableFiles.set(fullPath, file.content);
-         });
-
-
-        // --- Show Editor Area and Load First File ---
-         fileEditorArea.style.display = 'block';
-         renderEditableFileList();
-
-         const defaultFirstFile = `${packNamespace}/main.mcfunction`;
-         const firstFileToLoad = editableFiles.has(defaultFirstFile) ? defaultFirstFile : (editableFiles.size > 0 ? editableFiles.keys().next().value : null);
-
-         if (firstFileToLoad) {
-             loadFileIntoEditor(firstFileToLoad);
-         } else {
-             editorStatusDiv.textContent = 'No editable files were generated.';
-             if (fileEditorTextarea) fileEditorTextarea.value = '';
-         }
-
-
-        // --- Finalize Preparation ---
-        if(packStatusDiv) packStatusDiv.textContent = 'Files are ready for editing.';
-        generateAndDownloadPackBtn.disabled = false;
-        prepareFilesBtn.disabled = false;
-
-    }
-
-    // Generation and Download Logic
-    async function generateAndDownloadPack() {
-         if (!generateAndDownloadPackBtn || !packStatusDiv || !packNameInput || !packDescriptionInput || !packIconInput || !editableFiles) {
-             console.error("Missing required elements for pack generation. Cannot proceed.");
-             if(packStatusDiv) packStatusDiv.textContent = 'Error generating pack: Missing page elements.';
-              if(generateAndDownloadPackBtn) generateAndDownloadPackBtn.disabled = false;
-             return;
-         }
-
-        generateAndDownloadPackBtn.disabled = true;
-        if(packStatusDiv) packStatusDiv.textContent = 'Generating zip pack...';
-
-        const packName = packNameInput.value.trim() || 'My Function Pack';
-        const packDescription = packDescriptionInput.value.trim() || 'Generated by the online tool';
-        const packNamespace = sanitizeNamespace(packName) || 'my_pack';
-
-        const manifestUuid = generateUUID();
-        const moduleUuid = generateUUID();
-
-        const manifestContent = JSON.stringify({
-            "format_version": 2,
-            "header": {
-                "name": packName,
-                "description": packDescription,
-                "uuid": manifestUuid,
-                "version": [1, 0, 0],
-                "min_engine_version": [1, 16, 0]
-            },
-            "modules": [
-                {
-                    "type": "data",
-                    "uuid": moduleUuid,
-                    "version": [1, 0, 0]
-                }
-            ]
-        }, null, 4);
-
-        const tickJsonContent = JSON.stringify({
-             "values": [
-                `${packNamespace}:main`
-             ]
-        }, null, 4);
+         // Add the core files to the map for zipping
+         const allFunctionFiles = new Map([
+             [`${packNamespace}/main.mcfunction`, mainCommands.join('\n')],
+             [`${packNamespace}/objectives.mcfunction`, objectiveCommands.join('\n')],
+             [`${packNamespace}/setup.mcfunction`, setupCommands.join('\n')],
+             ...additionalFilesMap // Spread the additional files into this map
+         ]);
 
 
         // --- Create Zip File ---
@@ -516,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
              } catch (error) {
                  if(packStatusDiv) packStatusDiv.textContent = `Error reading pack icon: ${error}`;
                  console.error("Error reading pack icon:", error);
-                 generateAndDownloadPackBtn.disabled = false;
+                 generateBtn.disabled = false;
                  return;
              }
         }
@@ -524,7 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const functionsFolder = zip.folder("functions");
         functionsFolder.file("tick.json", tickJsonContent);
 
-        editableFiles.forEach((content, relativePath) => {
+        // Add all generated function files
+        allFunctionFiles.forEach((content, relativePath) => {
             zip.file(`functions/${relativePath}`, content);
         });
 
@@ -535,46 +415,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 download(`${packName}.zip`, content);
 
                 if(packStatusDiv) packStatusDiv.textContent = 'Pack generated and downloaded successfully!';
-                generateAndDownloadPackBtn.disabled = false;
+                generateBtn.disabled = false;
 
             })
             .catch(function(error) {
                 if(packStatusDiv) packStatusDiv.textContent = `Error generating pack: ${error}`;
-                generateAndDownloadPackBtn.disabled = false;
+                generateBtn.disabled = false;
                 console.error("Error generating zip:", error);
             });
     }
 
 
     // --- Add Event Listeners for Function Pack tab elements ---
-    if (prepareFilesBtn) {
-        prepareFilesBtn.addEventListener('click', prepareFilesForEditing);
-         // Set initial state on load
-        if (generateAndDownloadPackBtn) generateAndDownloadPackBtn.disabled = true;
-         if (fileEditorArea) fileEditorArea.style.display = 'none';
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generatePack);
+        // The generate button is enabled by default in HTML
     }
 
-    if (generateAndDownloadPackBtn) {
-        generateAndDownloadPackBtn.addEventListener('click', generateAndDownloadPack);
-    }
-
+    // Event delegation on the parent div for preset add/remove buttons
     const presetsSection = document.querySelector('.presets.section');
     if(presetsSection) {
          presetsSection.addEventListener('click', handlePresetButtonClick);
     }
 
-    if (editableFileListDiv) {
-         editableFileListDiv.addEventListener('click', function(event) {
-             const button = event.target.closest('button[data-filename]');
-             if (button) {
-                 loadFileIntoEditor(button.dataset.filename);
-             }
-         });
-    }
 
-    if (fileEditorTextarea) {
-         fileEditorTextarea.addEventListener('input', handleEditorInput);
-    }
+    // --- Removed Editor Event Listeners ---
+    // if (prepareFilesBtn) prepareFilesBtn.addEventListener('click', prepareFilesForEditing);
+    // if (editableFileListDiv) { ... }
+    // if (fileEditorTextarea) { ... }
 
 
     // --- QR Code to MCFunction Tool Logic and Listeners ---
