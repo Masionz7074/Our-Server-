@@ -2,682 +2,575 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Get ALL Element References FIRST ---
+    // This helps prevent issues where an element might not be found
+    // if its section is initially hidden or if the script structure is complex.
+    // We check if they exist before using them later.
+
     // Global Elements and Navigation
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const sidebar = document.getElementById('sidebar');
     const sidebarLinks = document.querySelectorAll('#sidebar .sidebar-link');
     const mainContent = document.getElementById('mainContent');
-    const contentSections = document.querySelectorAll('.content-section');
+    const contentSections = document.querySelectorAll('.content-section'); // Includes homeTool, functionPackTool, qrTool, nbtTool, settingsTool
 
     // Function Pack Creator Tool Elements
-    const generateBtn = document.getElementById('generateBtn');
+    const generateBtn = document.getElementById('generateBtn'); // Main generate button
     const packNameInput = document.getElementById('packName');
     const packDescriptionInput = document.getElementById('packDescription');
     const packIconInput = document.getElementById('packIcon');
-    const presetListDiv = document.getElementById('presetList');
-    const selectedPresetsDiv = document.getElementById('selectedPresets');
-    const selectedPresetsListUl = document.getElementById('selectedPresetsList');
-    const packStatusDiv = document.getElementById('packStatus');
+    const presetListDiv = document.getElementById('presetList'); // Div for available presets
+    const selectedPresetsDiv = document.getElementById('selectedPresets'); // The container div for selected list
+    const selectedPresetsListUl = document.getElementById('selectedPresetsList'); // The UL for selected items
+    const packStatusDiv = document.getElementById('packStatus'); // Status message
 
     // QR Code to MCFunction Tool Elements
-    const imageInput = document.getElementById('imageInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const processingCanvas = document.getElementById('processingCanvas');
-    const ctx = processingCanvas ? processingCanvas.getContext('2d') : null;
-    const convertButton = document.getElementById('convertButton');
-    const outputCommands = document.getElementById('outputCommands');
-    const copyButton = document.getElementById('copyButton');
-    const downloadButton = document.getElementById('downloadButton');
-    const imageStatusMessage = document.getElementById('imageStatusMessage');
-    const pixelRatioInput = document.getElementById('pixelRatio');
-    const baseHeightInput = document.getElementById('baseHeight');
-    const zOffsetInput = document.getElementById('zOffset');
-    const ditheringEnabledInput = document.getElementById('ditheringEnabled');
-    const thresholdInput = document.getElementById('threshold');
-    const thresholdValueSpan = document.getElementById('thresholdValue');
+    const imageInput = document.getElementById('imageInput'); // File input for image
+    const imagePreview = document.getElementById('imagePreview'); // Image preview element (hidden initially)
+    const processingCanvas = document.getElementById('processingCanvas'); // Hidden canvas for processing
+    const ctx = processingCanvas ? processingCanvas.getContext('2d') : null; // Get 2D context
+    const convertButton = document.getElementById('convertButton'); // Convert image button
+    const outputCommands = document.getElementById('outputCommands'); // Textarea for commands
+    const copyButton = document.getElementById('copyButton'); // Copy commands button
+    const downloadButton = document.getElementById('downloadButton'); // Download .mcfunction button
+    const imageStatusMessage = document.getElementById('imageStatusMessage'); // Status message for image tool
+    const pixelRatioInput = document.getElementById('pixelRatio'); // Input for pixels per block
+    const baseHeightInput = document.getElementById('baseHeight'); // Input for base Y height
+    const zOffsetInput = document.getElementById('zOffset'); // Input for Z offset
+    const ditheringEnabledInput = document.getElementById('ditheringEnabled'); // Checkbox for dithering
+    const thresholdInput = document.getElementById('threshold'); // Range input for threshold
+    const thresholdValueSpan = document.getElementById('thresholdValue'); // Span to display threshold value
 
     // MCFunction to Nifty Building Tool NBT Elements
-    const nbtStatusMessage = document.getElementById('nbtStatusMessage');
-    const nbtFileInput = document.getElementById('input-file');
-    const nbtTitleInput = document.getElementById('nbt-title');
-    const commandsPerNpcInput = document.getElementById('commands-per-npc');
+    const nbtStatusMessage = document.getElementById('nbtStatusMessage'); // Status message for NBT tool
+    const nbtFileInput = document.getElementById('input-file'); // File input for .mcfunction
+    const nbtTitleInput = document.getElementById('nbt-title'); // Text input for build title
+    const commandsPerNpcInput = document.getElementById('commands-per-npc'); // Number input for commands per NPC
 
     // Audio Elements
-    const clickSound = document.getElementById('clickSound');
-    const backgroundMusic = document.getElementById('backgroundMusic');
+    const clickSound = document.getElementById('clickSound'); // Click sound audio tag
+    const backgroundMusic = document.getElementById('backgroundMusic'); // Background music audio tag
 
     // Settings Tool Elements
-    const musicVolumeInput = document.getElementById('musicVolume');
-    const musicVolumeValueSpan = document.getElementById('musicVolumeValue');
-    const sfxVolumeInput = document.getElementById('sfxVolume');
-    const sfxVolumeValueSpan = document.getElementById('sfxVolumeValue');
-    const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+    const musicVolumeInput = document.getElementById('musicVolume'); // Range input for music volume
+    const musicVolumeValueSpan = document.getElementById('musicVolumeValue'); // Span to display music volume percentage
+    const sfxVolumeInput = document.getElementById('sfxVolume'); // Range input for SFX volume
+    const sfxVolumeValueSpan = document.getElementById('sfxVolumeValue'); // Span to display SFX volume percentage
+    const toggleMusicBtn = document.getElementById('toggleMusicBtn'); // Button to toggle music playback
 
 
     // --- Set Initial Audio Volumes and State (Read from localStorage) ---
+    // Use unique keys for each setting in localStorage
+    const MUSIC_VOLUME_STORAGE_KEY = 'minecraftToolsMusicVolume';
+    const SFX_VOLUME_STORAGE_KEY = 'minecraftToolsSfxVolume';
+
     if (backgroundMusic) {
-        const savedMusicVolume = localStorage.getItem('musicVolume');
-        backgroundMusic.volume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.5; // Default to 50% if no saved volume
+        const savedMusicVolume = localStorage.getItem(MUSIC_VOLUME_STORAGE_KEY);
+        // Parse float and default to 0.5 (50%) if saved value is null or not a valid number
+        backgroundMusic.volume = savedMusicVolume !== null && !isNaN(parseFloat(savedMusicVolume)) ? parseFloat(savedMusicVolume) : 0.5;
+        backgroundMusic.loop = true; // Ensure music loops continuously
+        // Pause immediately and reset time to ensure play() works correctly on first user interaction
         backgroundMusic.pause();
         backgroundMusic.currentTime = 0;
+        // Add a muted attribute initially to potentially help with autoplay, then remove it later
+        backgroundMusic.muted = true; // Start muted to comply with autoplay policies
+
+    } else {
+        console.warn("Background music element not found.");
     }
+
      if (clickSound) {
-        const savedSfxVolume = localStorage.getItem('sfxVolume');
-         clickSound.volume = savedSfxVolume !== null ? parseFloat(savedSfxVolume) : 1.0; // Default to 100% if no saved volume
+        const savedSfxVolume = localStorage.getItem(SFX_VOLUME_STORAGE_KEY);
+         // Parse float and default to 1.0 (100%)
+         clickSound.volume = savedSfxVolume !== null && !isNaN(parseFloat(savedSfxVolume)) ? parseFloat(savedSfxVolume) : 1.0;
+     } else {
+         console.warn("Click sound element not found.");
      }
 
 
     // --- Global Functions (Navigation, Download, Sound) ---
 
+    // Function to toggle sidebar open/closed state
     function toggleSidebar() {
-        if (sidebar) {
-            sidebar.classList.toggle('open');
-            document.body.classList.toggle('sidebar-open');
+        if (sidebar) { // Check if sidebar element exists
+            sidebar.classList.toggle('open'); // Toggle the 'open' class
+            document.body.classList.toggle('sidebar-open'); // Toggle class on body for CSS layout shift
         }
     }
 
+    // Function to show a specific content section and hide others
     function showSection(sectionId) {
-        // Hide all content sections
+        // Hide all content sections by default display property
         contentSections.forEach(section => {
             section.style.display = 'none';
         });
 
-        // Show the selected section
+        // Find the selected section by ID
         const selectedSection = document.getElementById(sectionId);
         if (selectedSection) {
-            selectedSection.style.display = 'block';
+            selectedSection.style.display = 'block'; // Make the selected section visible
+
              if (mainContent) {
-                 // Smooth scroll behavior might be annoying, simpler is instant scroll
-                 mainContent.scrollTo({ top: 0, behavior: 'auto' }); // Scroll to top
+                 // Scroll to top of the main content area when switching sections for better UX
+                 mainContent.scrollTo({ top: 0, behavior: 'auto' }); // Use 'auto' for instant scroll, 'smooth' for animation
              }
 
             // Update active state in sidebar links
+            // Remove 'active-section' class from all links, then add to the selected one
             sidebarLinks.forEach(link => {
                  if (link.dataset.section === sectionId) {
-                     link.classList.add('active-section');
+                     link.classList.add('active-section'); // Add active class
                  } else {
-                     link.classList.remove('active-section');
+                     link.classList.remove('active-section'); // Remove active class
                  }
             });
 
-            // --- Perform setup specific to the section being shown ---
+            // --- Perform specific setup needed when a particular section is made visible ---
+            // This ensures elements are initialized *after* they are displayed and referenced
             if (sectionId === 'functionPackTool') {
                 if (presetListDiv && selectedPresetsListUl) {
-                    renderPresetList();
-                    renderSelectedPresetsList();
-                }
+                    renderPresetList(); // Re-render available presets
+                    renderSelectedPresetsList(); // Re-render selected presets (also calls renderPresetList)
+                } else { console.warn("Function Pack Creator preset elements not found."); }
             } else if (sectionId === 'qrTool') {
                 if (thresholdInput && thresholdValueSpan) {
+                    // Function to update the displayed threshold value and the range slider track fill CSS variable
                     const updateThresholdDisplay = () => {
-                        thresholdValueSpan.textContent = thresholdInput.value;
+                        thresholdValueSpan.textContent = thresholdInput.value; // Update the displayed value
+                        // Update the CSS variable for the range slider track fill
                         thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
                     };
-                    updateThresholdDisplay();
-                }
+                    // Attach the 'input' event listener to the threshold slider, removing potential previous ones
+                    thresholdInput.removeEventListener('input', updateThresholdDisplay);
+                    thresholdInput.addEventListener('input', updateThresholdDisplay);
+                    updateThresholdDisplay(); // Update display immediately when section is shown
+
+                } else { console.warn("QR Tool threshold elements not found."); }
+                 // Also reset image preview and status when entering the QR tool section for a clean state
+                 if (imagePreview) imagePreview.style.display = 'none'; // Hide image preview
+                 if (convertButton) convertButton.disabled = true; // Disable convert button
+                 if (outputCommands) outputCommands.value = ''; // Clear output textarea
+                 if (copyButton) copyButton.disabled = true; // Disable copy button
+                 if (downloadButton) downloadButton.disabled = true; // Disable download button
+                 if (imageStatusMessage) imageStatusMessage.textContent = 'Select an image to begin.'; // Reset status message
+                 // Remove the pixel-preview class from the canvas
+                 if (processingCanvas) processingCanvas.classList.remove('pixel-preview');
+
+
             } else if (sectionId === 'settingsTool') {
-                 // Initialize settings UI when the settings section is shown
+                 // Initialize settings UI and attach listeners *when* settings section is shown
                  if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
-                     // Ensure the slider reflects the current audio volume
-                     musicVolumeInput.value = backgroundMusic.volume;
-                     musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`;
-                 }
+                     // Ensure the slider reflects the current audio volume loaded from localStorage
+                     musicVolumeInput.value = backgroundMusic.volume; // Set slider position
+                     musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update displayed percentage
+                     // Attach listener to the slider, removing potential previous ones to avoid duplicates
+                     musicVolumeInput.removeEventListener('input', handleMusicVolumeChange);
+                     musicVolumeInput.addEventListener('input', handleMusicVolumeChange);
+                 } else if (!backgroundMusic && musicVolumeInput) {
+                     console.warn("Background music element missing, settings music slider might not work.");
+                     musicVolumeInput.disabled = true; // Disable slider if audio missing
+                 } else { console.warn("Settings music volume elements not found."); }
+
+
                  if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
-                     // Ensure the slider reflects the current audio volume
-                     sfxVolumeInput.value = clickSound.volume;
-                     sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`;
-                     // Set initial lastValue for test sound logic
+                     // Ensure the slider reflects the current audio volume loaded from localStorage
+                     sfxVolumeInput.value = clickSound.volume; // Set slider position
+                     sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update displayed percentage
+                     // Set initial lastValue for test sound logic comparison on this specific slider
                      sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value;
-                 }
-                  // Update music toggle button text
+                     // Attach listener to the slider, removing potential previous ones
+                     sfxVolumeInput.removeEventListener('input', handleSfxVolumeChange);
+                     sfxVolumeInput.addEventListener('input', handleSfxVolumeChange);
+                 } else if (!clickSound && sfxVolumeInput) {
+                     console.warn("Click sound element missing, settings SFX slider might not work.");
+                     sfxVolumeInput.disabled = true; // Disable slider if audio missing
+                 } else { console.warn("Settings SFX volume elements not found."); }
+
+
+                  // Update music toggle button text and attach listener, removing potential previous ones
                  if (toggleMusicBtn && backgroundMusic) {
                      toggleMusicBtn.textContent = backgroundMusic.paused ? 'Play Music' : 'Pause Music';
-                 }
+                     toggleMusicBtn.removeEventListener('click', toggleMusicPlayback);
+                     toggleMusicBtn.addEventListener('click', toggleMusicPlayback);
+                 } else if (!backgroundMusic && toggleMusicBtn) {
+                     console.warn("Background music element missing, music toggle button might not work.");
+                     toggleMusicBtn.disabled = true; // Disable toggle if music missing
+                 } else { console.warn("Settings music toggle button not found."); }
+
             }
+            // Add checks for other sections here if they need specific setup on show
+            // e.g., NBT tool reset?
+             if (sectionId === 'nbtTool') {
+                 if (nbtStatusMessage) nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.'; // Reset status
+                 // No other complex state to reset currently
+             }
+             // Home tool doesn't need specific setup on show
         } else {
              console.error(`Content section with ID "${sectionId}" not found.`);
         }
 
         // Close the sidebar on mobile after selecting a section
-        // Use a width check or check for the sidebar class
-        if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('open')) {
-             toggleSidebar();
+        // Check screen width or check for the 'sidebar-open' class on the body
+        if (window.innerWidth <= 768 && document.body.classList.contains('sidebar-open')) {
+             toggleSidebar(); // Close the sidebar by calling the toggle function
         }
     }
 
-    // Shared Download Function (Same as before)
+    // Shared Download Function - Creates and triggers download of a file (used by FuncPack and QR tools)
     function download(filename, textOrBlob) {
-        const element = document.createElement('a');
+        const element = document.createElement('a'); // Create a temporary anchor element
+        // Determine if we have text content or a Blob (like from JSZip)
         if (textOrBlob instanceof Blob) {
-             element.setAttribute('href', URL.createObjectURL(textOrBlob));
-        } else {
-             element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(textOrBlob));
+             element.setAttribute('href', URL.createObjectURL(textOrBlob)); // Create a temporary URL for the Blob
+        } else { // Assume it's text content
+             element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(textOrBlob)); // Encode text as a data URL
         }
-        element.setAttribute('download', filename);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
+        element.setAttribute('download', filename); // Set the download filename
+        element.style.display = 'none'; // Hide the link element
+        document.body.appendChild(element); // Append to body (required for click)
+        element.click(); // Simulate a click to trigger download
+        document.body.removeChild(element); // Clean up the temporary element
 
+        // Clean up the object URL if a Blob was used
         if (textOrBlob instanceof Blob) {
-             URL.revokeObjectURL(element.href);
+             URL.revokeObjectURL(element.href); // Release the temporary URL
         }
     }
 
-    // Sound on Click Logic (Uses clickSound volume)
+    // Sound on Click Logic - Plays the click sound effect
     function playClickSound() {
-        if (clickSound) {
+        if (clickSound) { // Check if the audio element exists
+            // Stop and rewind the sound to the start to allow rapid playback
             clickSound.currentTime = 0;
-            clickSound.play().catch(e => { /* Error ignored, often autoplay policy */ });
+            // Attempt to play the sound. Use catch to handle potential errors (e.g., not loaded, browser restrictions)
+            clickSound.play().catch(e => { /* Error ignored, often autoplay policy before user interaction */ });
+        } else {
+             // console.warn("Attempted to play click sound, but element is missing."); // Log warning if element not found
         }
     }
 
-    // Background Music Playback Attempt Logic
+    // Background Music Playback Attempt Logic - Tries to play music after first user interaction
+    // Browsers often block autoplay until the user interacts with the page.
     function attemptBackgroundMusicPlayback() {
+        // Only proceed if the backgroundMusic element exists and is currently paused
         if (backgroundMusic && backgroundMusic.paused) {
-            const playPromise = backgroundMusic.play();
+             // Unmute the audio as user interaction has occurred
+             backgroundMusic.muted = false;
 
-            if (playPromise !== undefined) {
+            const playPromise = backgroundMusic.play(); // Attempt to play - returns a Promise
+
+            // Use the promise to determine if playback started successfully
+            if (playPromise !== undefined) { // Check if play() returned a Promise (modern browsers)
                 playPromise.then(() => {
+                    // Playback started successfully
                     console.log("Background music started.");
-                    // Music is playing, remove these specific listeners
+                    // Playback succeeded, remove the initial global listeners that trigger this function
                     document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
                     document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+                    // Update settings button text if settings section is currently shown
+                    if (toggleMusicBtn) toggleMusicBtn.textContent = 'Pause Music';
+
                 }).catch(error => {
+                    // Playback failed (likely autoplay blocked by browser until *more* user interaction, or an error)
                     console.warn("Background music autoplay blocked or failed:", error);
+                    // Keep the listeners active to try again on the next user interaction
+                    // Optionally, display a message to the user like "Click anywhere to play music"
+                     backgroundMusic.muted = true; // Re-mute if play failed to avoid loud unexpected sound later
                 });
             } else {
+                 // Fallback for older browsers that don't return a Promise from play()
+                 // We assume it played and remove listeners.
                  console.log("Attempted background music play (no promise returned).");
                  document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
                  document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
+                 // Update settings button text if settings section is currently shown
+                 if (toggleMusicBtn) toggleMusicBtn.textContent = 'Pause Music';
             }
         }
     }
 
-    // --- Settings Functionality ---
+    // --- Settings Functionality Handlers ---
+    // Handle change on Music Volume slider
     function handleMusicVolumeChange() {
          if (backgroundMusic && musicVolumeInput && musicVolumeValueSpan) {
-            backgroundMusic.volume = parseFloat(musicVolumeInput.value); // Update volume
-            musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`; // Update display
-            localStorage.setItem('musicVolume', backgroundMusic.volume.toString()); // Save to local storage as string
+            const volume = parseFloat(musicVolumeInput.value); // Get slider value as float
+            if (!isNaN(volume)) { // Ensure it's a valid number
+                backgroundMusic.volume = volume; // Set the actual audio volume
+                musicVolumeValueSpan.textContent = `${Math.round(volume * 100)}%`; // Update displayed percentage (0-100)
+                // Save the volume setting to localStorage
+                localStorage.setItem(MUSIC_VOLUME_STORAGE_KEY, volume.toString()); // Save as string
+            }
          }
     }
 
+    // Handle change on SFX Volume slider
     function handleSfxVolumeChange() {
          if (clickSound && sfxVolumeInput && sfxVolumeValueSpan) {
-             clickSound.volume = parseFloat(sfxVolumeInput.value); // Update volume
-             sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`; // Update display
-             localStorage.setItem('sfxVolume', clickSound.volume.toString()); // Save to local storage as string
+            const volume = parseFloat(sfxVolumeInput.value); // Get slider value as float
+            if (!isNaN(volume)) { // Ensure it's a valid number
+                 clickSound.volume = volume; // Set the actual audio volume
+                 sfxVolumeValueSpan.textContent = `${Math.round(volume * 100)}%`; // Update displayed percentage (0-100)
+                 // Save the volume setting to localStorage
+                 localStorage.setItem(SFX_VOLUME_STORAGE_KEY, volume.toString()); // Save as string
 
-             // Play a quick test sound if volume is increased from 0 and slider position changed
-             if (clickSound.volume > 0 && sfxVolumeInput.dataset.lastValue !== sfxVolumeInput.value) {
-                 playClickSound();
-             }
-             sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value; // Store current value for next comparison
+                 // Play a quick test sound if volume is increased from 0 and slider position changed notably
+                 // Get the previously stored value from the dataset attribute
+                 const lastValue = parseFloat(sfxVolumeInput.dataset.lastValue || '0'); // Default to 0 if lastValue not set
+                 // Play sound if the new volume is greater than 0 AND it has increased significantly from the last recorded value
+                 if (volume > 0 && volume > lastValue + 0.01) { // Check for an increase of at least 0.01 to avoid noise while dragging
+                     playClickSound(); // Play the click sound
+                 }
+                 sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value; // Store the current string value for next comparison
+            }
          }
     }
 
+    // Handle click on Music Toggle button
     function toggleMusicPlayback() {
         if (backgroundMusic && toggleMusicBtn) {
             if (backgroundMusic.paused) {
-                // Attempt to play, which also handles autoplay rules
+                // If music is paused, attempt to play it using the dedicated function
+                // attemptBackgroundMusicPlayback handles browser autoplay rules and updates the button text on success.
                 attemptBackgroundMusicPlayback();
-                // Also explicitly remove the initial attempt listeners in case the attemptBackgroundMusicPlayback promise fails later but the button click still works
-                 document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
-                 document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
-
-                toggleMusicBtn.textContent = 'Pause Music';
+                // Give immediate feedback that we are attempting playback
+                 toggleMusicBtn.textContent = 'Play Music (Attempting...)';
             } else {
+                // If music is playing, pause it
                 backgroundMusic.pause();
                 console.log("Background music paused.");
-                toggleMusicBtn.textContent = 'Play Music';
+                toggleMusicBtn.textContent = 'Play Music'; // Update button text
             }
-        }
+        } else { console.warn("Music toggle button or audio element not found."); }
     }
 
 
     // --- Add Global Event Listeners ---
 
-    // Listener for the hamburger button
+    // Listener for the hamburger button to toggle sidebar visibility
     if (hamburgerBtn) {
-        hamburgerBtn.addEventListener('click', toggleSidebar);
-    }
+        hamburgerBtn.addEventListener('click', toggleSidebar); // Attach listener
+    } else { console.warn("Hamburger button not found, sidebar toggle will not work."); }
 
-    // Listeners for sidebar links using delegation
+    // Listeners for sidebar links using event delegation on the parent elements (menu and footer)
     const sidebarMenu = document.querySelector('.sidebar-menu');
     const sidebarFooter = document.querySelector('.sidebar-footer');
 
     if (sidebarMenu) {
         sidebarMenu.addEventListener('click', (event) => {
-            const linkButton = event.target.closest('.sidebar-link');
-            if (linkButton && linkButton.dataset.section) {
-                showSection(linkButton.dataset.section);
+            const linkButton = event.target.closest('.sidebar-link'); // Check if the click was on a sidebar link or descendant
+            if (linkButton && linkButton.dataset.section) { // If a link button was clicked and has a data-section attribute
+                showSection(linkButton.dataset.section); // Show the corresponding content section
+
+                 // Play click sound for sidebar links (handled by dedicated listener below)
+                 // Close sidebar on mobile after clicking a link
+                 if (window.innerWidth <= 768) { // Check if screen width is mobile
+                     toggleSidebar(); // Close the sidebar
+                 }
             }
         });
-    }
+    } else { console.warn("Sidebar menu not found."); }
+
      if (sidebarFooter) {
         sidebarFooter.addEventListener('click', (event) => {
-            const linkButton = event.target.closest('.sidebar-link');
-            if (linkButton && linkButton.dataset.section) {
-                showSection(linkButton.dataset.section);
+            const linkButton = event.target.closest('.sidebar-link'); // Check if the click was on a sidebar link or descendant
+            if (linkButton && linkButton.dataset.section) { // If a link button was clicked and has a data-section attribute
+                showSection(linkButton.dataset.section); // Show the corresponding content section
+
+                 // Play click sound for sidebar links (handled by dedicated listener below)
+                 // Close sidebar on mobile after clicking a link
+                 if (window.innerWidth <= 768) { // Check if screen width is mobile
+                     toggleSidebar(); // Close the sidebar
+                 }
             }
         });
-    }
+    } else { console.warn("Sidebar footer not found."); }
 
 
-    // Add event listener to play click sound on button clicks using delegation on the body
+    // Add event listener to play click sound on *most* element clicks using delegation on the body
+    // This handles clicks on general buttons *outside* the sidebar/navigation and sidebar links themselves.
     document.body.addEventListener('click', (event) => {
-        const clickedElement = event.target;
-        // Check if the clicked element or its closest ancestor is a button, but NOT the hamburger icon itself
-        // or a link within the sidebar, or a slider input.
+        const clickedElement = event.target; // The element that was actually clicked
+
+        // --- Play Click Sound Logic ---
+        // Check if the clicked element or its closest ancestor is a button
         const button = clickedElement.closest('button');
 
-        // Check if it's a button, not disabled, and not the hamburger or a sidebar link
-        if (button && !button.disabled && button !== hamburgerBtn && !button.closest('#sidebar')) {
-             // Exclude clicks on the range input element itself (thumb drag)
-             if (event.target.type !== 'range') {
-                 playClickSound();
-             }
+        // Play sound if it meets the criteria:
+        // 1. It's a button (`button` is not null)
+        // 2. It's NOT disabled (`!button.disabled`)
+        // 3. It's NOT the hamburger button itself (`button !== hamburgerBtn`)
+        // 4. It's NOT a range input element (clicks/drags on these often have built-in or different feedback) (`event.target.type !== 'range'`)
+        // 5. It's NOT a link *within* the sidebar (sidebar links have a specific delegation handler above that already plays the sound) (`!button.closest('#sidebar')`)
+        if (button && !button.disabled && button !== hamburgerBtn && event.target.type !== 'range' && !button.closest('#sidebar')) {
+             playClickSound(); // Play the click sound
         }
-        // Optionally add sound for sidebar links separately if desired, but they are buttons so the above works
-        // if (clickedElement.closest('.sidebar-link')) {
-        //      playClickSound();
-        // }
+
+        // --- Background Music Autoplay Attempt Logic ---
+        // This listener also serves as the initial trigger for background music after user interaction.
+        // The `attemptBackgroundMusicPlayback` function itself checks if music is paused before trying to play.
+        // The `{ once: true }` option on the listener itself is added later to ensure it's removed after the first trigger.
+        // So, no need to call attemptBackgroundMusicPlayback here explicitly, the listener setup at the bottom does it.
     });
 
 
-    // Add initial listeners to try playing background music on the first click or keydown
-    document.body.addEventListener('click', attemptBackgroundMusicPlayback);
-    document.body.addEventListener('keydown', attemptBackgroundMusicPlayback);
+    // Add initial listeners to try playing background music on the first user interaction (click or keydown)
+    // Using `{ once: true }` ensures these listeners are automatically removed after the first time they trigger
+    if (backgroundMusic) {
+        document.body.addEventListener('click', attemptBackgroundMusicPlayback, { once: true }); // Trigger on first click anywhere
+        document.body.addEventListener('keydown', attemptBackgroundMusicPlayback, { once: true }); // Trigger on first key press anywhere
+    } else { console.warn("Background music element not found, music will not play."); }
 
 
     // --- Add Event Listeners for Function Pack tab elements ---
+    // These are added directly on DOMContentLoaded as they don't depend on showSection state for setup
     if (generateBtn) {
-        generateBtn.addEventListener('click', generatePack);
-    }
+        generateBtn.addEventListener('click', generatePack); // Attach listener to the Generate button
+    } else { console.warn("Function Pack Generator button not found."); }
 
+    // Event delegation on the parent div for preset add/remove buttons
     const presetsSection = document.querySelector('.presets.section');
     if(presetsSection) {
-         presetsSection.addEventListener('click', handlePresetButtonClick);
-    }
+         presetsSection.addEventListener('click', handlePresetButtonClick); // Attach delegation listener to the section
+    } else { console.warn("Presets section not found."); }
 
 
     // --- QR Code to MCFunction Tool Logic and Listeners ---
-
+    // These are added directly on DOMContentLoaded as they don't depend on showSection state for setup
     if (imageInput) {
+        // Attach listener to the file input for image selection
         imageInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (imagePreview) { imagePreview.src = e.target.result; imagePreview.style.display = 'block'; }
-                    if (convertButton) convertButton.disabled = false;
+            const file = event.target.files[0]; // Get the selected file
+            if (file) { // If a file was selected
+                const reader = new FileReader(); // Create a FileReader to read the file
+                reader.onload = function(e) { // Callback when file is read successfully
+                    if (imagePreview) { imagePreview.src = e.target.result; imagePreview.style.display = 'block'; } // Show image preview
+                    if (convertButton) convertButton.disabled = false; // Enable convert button
+                    // Reset output area
                     if (outputCommands) outputCommands.value = '';
                     if (copyButton) copyButton.disabled = true;
                     if (downloadButton) downloadButton.disabled = true;
-                    if (imageStatusMessage) imageStatusMessage.textContent = 'Image loaded. Adjust options and click Convert.';
+                    if (imageStatusMessage) imageStatusMessage.textContent = 'Image loaded. Adjust options and click Convert.'; // Update status
+                    // Remove the pixel-preview class from the canvas when a new image is loaded (if it was there)
+                    if (processingCanvas) processingCanvas.classList.remove('pixel-preview');
+
                 };
-                reader.onerror = function() {
+                reader.onerror = function() { // Callback if file reading fails
                     if (imageStatusMessage) imageStatusMessage.textContent = 'Error reading file.';
+                    // Reset UI on error
                     if (convertButton) convertButton.disabled = true;
                     if (imagePreview) imagePreview.style.display = 'none';
+                    if (outputCommands) outputCommands.value = '';
                     if (copyButton) copyButton.disabled = true;
                     if (downloadButton) downloadButton.disabled = true;
                 }
-                reader.readAsDataURL(file);
-            } else {
-                if (imagePreview) imagePreview.style.display = 'none';
-                if (convertButton) convertButton.disabled = true;
-                if (outputCommands) outputCommands.value = '';
-                if (copyButton) copyButton.disabled = true;
-                if (downloadButton) downloadButton.disabled = true;
-                if (imageStatusMessage) imageStatusMessage.textContent = 'Select an image to begin.';
+                reader.readAsDataURL(file); // Read the file content as a Data URL (for image preview)
+            } else { // If user cancelled file selection (e.g. clicked 'Cancel' in file picker)
+                // Reset UI to initial state for the QR tool
+                if (imagePreview) imagePreview.style.display = 'none'; // Hide preview
+                if (convertButton) convertButton.disabled = true; // Disable convert
+                if (outputCommands) outputCommands.value = ''; // Clear output
+                if (copyButton) copyButton.disabled = true; // Disable copy
+                if (downloadButton) downloadButton.disabled = true; // Disable download
+                if (imageStatusMessage) imageStatusMessage.textContent = 'Select an image to begin.'; // Reset status
+                 if (processingCanvas) processingCanvas.classList.remove('pixel-preview'); // Remove class from canvas
+
             }
         });
-    }
+    } else { console.warn("Image input element not found."); }
 
-    if (thresholdInput && thresholdValueSpan) {
-         const updateThresholdDisplay = () => {
-             thresholdValueSpan.textContent = thresholdInput.value;
-             thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
-         };
-         thresholdInput.addEventListener('input', updateThresholdDisplay);
-    }
-
+    // The threshold slider 'input' listener is attached within showSection('qrTool') because it needs thresholdInput element to be visible/ready.
 
     if (convertButton) {
+        // Attach listener to the Convert button
         convertButton.addEventListener('click', function() {
+            // Check if all required elements and conditions are met before processing
             if (!imagePreview || !imagePreview.src || imagePreview.src === '#' || !processingCanvas || !ctx || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton || !thresholdInput) {
                 console.error("Missing required elements for image conversion. Cannot proceed.");
                 if(imageStatusMessage) imageStatusMessage.textContent = 'Error converting image: Missing page elements.';
-                 if (convertButton) convertButton.disabled = false;
+                 if (convertButton) convertButton.disabled = false; // Re-enable button on error
                 return;
             }
 
-            if (imageStatusMessage) imageStatusMessage.textContent = 'Converting...';
+            if (imageStatusMessage) imageStatusMessage.textContent = 'Converting...'; // Update status
+            // Disable buttons during conversion
             if (convertButton) convertButton.disabled = true;
             if (copyButton) copyButton.disabled = true;
             if (downloadButton) downloadButton.disabled = true;
-            if (outputCommands) outputCommands.value = '';
+            if (outputCommands) outputCommands.value = ''; // Clear previous output
 
-            const img = new Image();
-            img.onload = function() {
-                processImage(img);
+            const img = new Image(); // Create a new Image object
+            img.onload = function() { // Callback when image loads successfully
+                processImage(img); // Process the loaded image
             };
-            img.onerror = function() {
+            img.onerror = function() { // Callback if image loading fails
                 if (imageStatusMessage) imageStatusMessage.textContent = 'Error loading image for processing.';
-                if (convertButton) convertButton.disabled = false;
+                if (convertButton) convertButton.disabled = false; // Re-enable button on error
             };
-            img.src = imagePreview.src;
+            img.src = imagePreview.src; // Set the image source to the preview's data URL
         });
-    }
-
-    function findClosestColor(pixelColor, palette) {
-        const black = palette[0];
-        const white = palette[1];
-
-        const r = pixelColor[0];
-        const g = pixelColor[1];
-        const b = pixelColor[2];
-
-        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-         const threshold = parseInt(document.getElementById('threshold')?.value) || 128;
-
-        if (luminance < threshold) {
-            return black;
-        } else {
-            return white;
-        }
-    }
-
-     function diffuseError(workingPixels, width, height, px, py, er, eg, eb, weight) {
-         if (px >= 0 && px < width && py >= 0 && py < height) {
-             const idx = (py * width + px) * 4;
-             if (workingPixels[idx + 3] > 10) {
-                 workingPixels[idx] = Math.max(0, Math.min(255, workingPixels[idx] + er * weight));
-                 workingPixels[idx + 1] = Math.max(0, Math.min(255, workingPixels[idx + 1] + eg * weight));
-                 workingPixels[idx + 2] = Math.max(0, Math.min(255, workingPixels[idx + 2] + eb * weight));
-             }
-         }
-     }
-
-    function processImage(img) {
-        if (!ctx || !processingCanvas || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton || !thresholdInput) {
-             console.error("Missing required elements inside processImage. Cannot proceed.");
-             if(imageStatusMessage) imageStatusMessage.textContent = 'Internal error during processing.';
-             if(convertButton) convertButton.disabled = false;
-             return;
-        }
-
-        const pixelRatio = parseInt(pixelRatioInput.value) || 1;
-        const baseHeight = parseInt(baseHeightInput.value) || 64;
-        const zOffset = parseInt(zOffsetInput.value) || 0;
-        const ditheringEnabled = ditheringEnabledInput.checked;
-
-        if (pixelRatio < 1) {
-             imageStatusMessage.textContent = 'Pixels per Block must be at least 1.';
-             convertButton.disabled = false;
-             return;
-        }
-
-        processingCanvas.width = img.width;
-        processingCanvas.height = img.height;
-        ctx.drawImage(img, 0, 0, img.width, img.height);
-
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        const pixels = imageData.data;
-        const workingPixels = ditheringEnabled ? new Uint8ClampedArray(pixels) : pixels;
-
-
-        const commands = [];
-        const outputWidth = Math.floor(img.width / pixelRatio);
-        const outputHeight = Math.floor(img.height / pixelRatio);
-
-        if (outputWidth === 0 || outputHeight === 0) {
-            imageStatusMessage.textContent = 'Image is too small for the chosen Pixels per Block.';
-            convertButton.disabled = false;
-            return;
-        }
-
-         ctx.clearRect(0, 0, processingCanvas.width, processingCanvas.height);
-        processingCanvas.width = outputWidth;
-        processingCanvas.height = outputHeight;
-         ctx.fillStyle = '#1a1a1a';
-         ctx.fillRect(0, 0, outputWidth, outputHeight);
-
-
-        for (let y = 0; y < outputHeight; y++) {
-            for (let x = 0; x < outputWidth; x++) {
-                 const startPixelX = x * pixelRatio;
-                 const startPixelY = y * pixelRatio;
-
-                 const pixelIndex = (startPixelY * img.width + startPixelX) * 4;
-                 const pixelR = workingPixels[pixelIndex];
-                 const pixelG = workingPixels[pixelIndex + 1];
-                 const pixelB = workingPixels[pixelIndex + 2];
-                 const pixelA = workingPixels[pixelIndex + 3];
-
-
-                 let matchedBlock = null;
-                 let finalColorForCanvas = [0, 0, 0];
-
-                 if (pixelA > 10) {
-                     const originalColor = [pixelR, pixelG, pixelB];
-                     matchedBlock = findClosestColor(originalColor, minecraftPalette);
-
-                     finalColorForCanvas = matchedBlock.color;
-
-                     if (ditheringEnabled) {
-                         let errorR = originalColor[0] - matchedBlock.color[0];
-                         let errorG = originalColor[1] - matchedBlock.color[1];
-                         let errorB = originalColor[2] - matchedBlock.color[2];
-
-                         diffuseError(workingPixels, img.width, img.height, startPixelX + 1, startPixelY, errorR, errorG, errorB, 7 / 16);
-                         diffuseError(workingPixels, img.width, img.height, startPixelX - 1, startPixelY + 1, errorR, errorG, errorB, 3 / 16);
-                         diffuseError(workingPixels, img.width, img.height, startPixelX, startPixelY + 1, errorR, errorG, errorB, 5 / 16);
-                         diffuseError(workingPixels, img.width, img.height, startPixelX + 1, startPixelY + 1, errorR, errorG, errorB, 1 / 16);
-                     }
-
-                      commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
-
-                 } else {
-                     matchedBlock = findClosestColor([255, 255, 255], minecraftPalette);
-                     finalColorForCanvas = matchedBlock.color;
-                     commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
-                 }
-
-
-                 ctx.fillStyle = `rgb(${finalColorForCanvas[0]}, ${finalColorForCanvas[1]}, ${finalColorForCanvas[2]})`;
-                 ctx.fillRect(x, y, 1, 1);
-            }
-        }
-
-        outputCommands.value = commands.join('\n');
-        imageStatusMessage.textContent = `Converted image to ${commands.length} blocks (${outputWidth}x${outputHeight}).`;
-        convertButton.disabled = false;
-        copyButton.disabled = commands.length === 0;
-        downloadButton.disabled = commands.length === 0;
-    }
+    } else { console.warn("Convert button not found."); }
 
     if (copyButton) {
+        // Attach listener to the Copy button
         copyButton.addEventListener('click', function() {
-            if (!outputCommands) return;
-            outputCommands.select();
-            outputCommands.setSelectionRange(0, 99999);
+            if (!outputCommands) return; // Check if textarea exists
+            outputCommands.select(); // Select the text in the textarea
+            outputCommands.setSelectionRange(0, 99999); // For mobile compatibility
 
+            // Copy the selected text to the clipboard using the Clipboard API
             navigator.clipboard.writeText(outputCommands.value).then(() => {
+                // Provide visual feedback that copy was successful
                 const originalText = copyButton.textContent;
                 copyButton.textContent = 'Copied!';
+                // Revert button text after a short delay
                 setTimeout(() => {
                     copyButton.textContent = originalText;
                 }, 1500);
             }).catch(err => {
+                // Handle potential errors during copy (e.g., not supported in all contexts, permissions)
                 console.error('Could not copy text: ', err);
-                 if(imageStatusMessage) imageStatusMessage.textContent = 'Error copying commands.';
+                 if(imageStatusMessage) imageStatusMessage.textContent = 'Error copying commands.'; // Report error to user
             });
         });
-    }
+    } else { console.warn("Copy button not found."); }
 
     if (downloadButton) {
+         // Attach listener to the Download button
          downloadButton.addEventListener('click', function() {
-             if (!outputCommands || !imageStatusMessage) return;
-             const textToSave = outputCommands.value;
-             if (!textToSave) {
-                 imageStatusMessage.textContent = 'No commands to download.';
+             if (!outputCommands || !imageStatusMessage) return; // Check elements
+             const textToSave = outputCommands.value; // Get text from textarea
+             if (!textToSave) { // Check if there is text to download
+                 imageStatusMessage.textContent = 'No commands to download.'; // Report status
                  return;
              }
+             // Use the shared download function to create and trigger download of .mcfunction file
              download('pixel_art.mcfunction', textToSave);
-             imageStatusMessage.textContent = 'Downloaded pixel_art.mcfunction';
+             imageStatusMessage.textContent = 'Downloaded pixel_art.mcfunction'; // Update status message
          });
-    }
+    } else { console.warn("Download button not found."); }
 
 
     // --- MCFunction to Nifty Building Tool NBT Logic and Listeners ---
-
+    // These are added directly on DOMContentLoaded
     if (nbtFileInput) {
-        nbtFileInput.addEventListener('change', getNBTFile);
-    }
-
-    function getNBTFile(event) {
-        const input = event.target;
-        if ('files' in input && input.files.length > 0) {
-             if(nbtStatusMessage) nbtStatusMessage.textContent = 'Reading file...';
-             processNBTFile(input.files[0]);
-        } else {
-             if(nbtStatusMessage) nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.';
-        }
-    }
-
-    function processNBTFile(file) {
-         if(!nbtStatusMessage || !nbtTitleInput || !commandsPerNpcInput) {
-             console.error("Missing NBT tool elements. Cannot proceed.");
-             if(nbtStatusMessage) nbtStatusMessage.textContent = 'Internal error: Missing elements.';
-             return;
-         }
-
-         nbtStatusMessage.textContent = 'Processing commands...';
-        readFileContent(file).then(content => {
-            const commands = getUsefulCommands(content);
-
-            if (commands.length === 0) {
-                 nbtStatusMessage.textContent = 'No setblock, fill, summon, or structure commands found in the file.';
-                 return;
+        // Attach listener to the file input for .mcfunction files
+        nbtFileInput.addEventListener('change', function(event) {
+            const input = event.target;
+            if ('files' in input && input.files.length > 0) { // Check if files were selected
+                 if(nbtStatusMessage) nbtStatusMessage.textContent = 'Reading file...'; // Update status
+                 processNBTFile(input.files[0]); // Process the first selected file
+            } else { // If user cancelled file selection
+                 if(nbtStatusMessage) nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.'; // Reset status
             }
-
-            let commands_per_npc = parseInt(commandsPerNpcInput.value);
-            let nbt_name = nbtTitleInput.value.trim();
-            let file_name;
-            if (nbt_name === "") {
-                file_name = "NiftyBuildingTool_Output.txt";
-                nbt_name = "Unnamed Build"
-            } else {
-                file_name = "NiftyBuildingTool_" + nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "") + ".txt";
-            }
-            if (isNaN(commands_per_npc) || commands_per_npc <= 0) {
-                commands_per_npc = 346;
-                 if (commandsPerNpcInput) commandsPerNpcInput.value = 346;
-            }
-
-            let curSec = 0;
-            let NBTdata = getBlockOpener(nbt_name);
-            let NPCCount = Math.ceil(commands.length / commands_per_npc);
-
-             nbtStatusMessage.textContent = `Generating NBT for ${commands.length} commands across ${NPCCount} NPCs...`;
-
-            for (var i = 0; i < commands.length; i += commands_per_npc) {
-                curSec++;
-                let NPCCommandList = commands.slice(i, i + commands_per_npc);
-                let nextNPC = (curSec === NPCCount ? 1 : curSec + 1);
-
-                const cleanNbtNameForTag = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "");
-
-                NPCCommandList.unshift(`/tickingarea add circle ~ ~ ~ 4 NIFTYBUILDINGTOOL_${cleanNbtNameForTag}`);
-                NPCCommandList.push(`/tickingarea remove NIFTYBUILDINGTOOL_${cleanNbtNameForTag}`);
-                if (NPCCount > 1) {
-                     NPCCommandList.push(`/dialogue open @e[tag="${cleanNbtNameForTag}${nextNPC}",type=NPC,c=1] @initiator`);
-                }
-                NPCCommandList.push(`/kill @s`);
-
-                NBTdata += getNPCOpener(curSec, nbt_name);
-                NBTdata += NPCCommandList.map(x => commandToNBT(x.trim())).join(",");
-                NBTdata += getNPCCloser();
-
-                if (curSec < NPCCount) {
-                  NBTdata += ",";
-                }
-            }
-            NBTdata += getBlockCloser();
-
-             nbtStatusMessage.textContent = 'Download starting...';
-            download(file_name, NBTdata);
-
-             nbtStatusMessage.textContent = `Successfully generated and downloaded ${file_name}.`;
-        }).catch(error => {
-             console.error("Error processing file:", error);
-             if(nbtStatusMessage) nbtStatusMessage.textContent = 'Error processing file. Check console (F12) for details.';
-         });
-    }
-
-    function readFileContent(file) {
-        const reader = new FileReader();
-        return new Promise((resolve, reject) => {
-            reader.onload = event => resolve(event.target.result);
-            reader.onerror = error => reject(error);
-            reader.readAsText(file);
-        })
-    }
-
-    function getUsefulCommands(content) {
-        return content.split('\n').map(x => x.replace(/^\s*\//, "").trim()).filter(x => {
-            return x.length > 0 && !x.startsWith("#") && (x.startsWith("setblock") || x.startsWith("fill") || x.startsWith("summon") || x.startsWith("structure"));
+            // input.value = ''; // Optional: Clear file input after selection to allow selecting the same file again immediately
         });
-    }
+    } else { console.warn("NBT file input not found."); }
 
-    function getBlockOpener(nbt_name) {
-        const escapedNbtNameForDisplay = nbt_name.replace(/"/g, '\\"').replace(/\n/g, '\\n');
-        return `{Block:{name:"minecraft:moving_block",states:{},version:17959425},Count:1b,Damage:0s,Name:"minecraft:moving_block",WasPickedUp:0b,tag:{display:{Lore:["Created using the Nifty Building Tool\\\\nBy Brutus314 and Clawsky123.\\\\n\\\\nÂ§gÂ§l${escapedNbtNameForDisplay}"],Name:"Â§gÂ§l${escapedNbtNameForDisplay}"},movingBlock:{name:"minecraft:sea_lantern",states:{},version:17879555},movingEntity:{Occupants:[`;
-    }
-
-    function getBlockCloser() {
-        return '],id:"Beehive"}}}';
-    }
-
-    function getNPCOpener(section, nbt_name) {
-         const cleanedNbtNameForTag = nbt_name.replace(/[^a-zA-Z0-9_\-]/g, "");
-         const escapedNbtNameForJSON = nbt_name.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
-
-        return `{ActorIdentifier:"minecraft:npc<>",SaveData:{Persistent:1b,Pos:[],Variant:18,definitions:["+minecraft:npc"],RawtextName:"${escapedNbtNameForJSON}",CustomName:"${escapedNbtNameForJSON}",CustomNameVisible:1b,Tags:["${cleanedNbtNameForTag}${section}","NiftyBuildingTool"],Actions:"[{\\"button_name\\" : \\"Build Section ${section}\\",\\"data\\" : [`;
-    }
-
-    function getNPCCloser() {
-        return `],\\"mode\\" : 0,\\"text\\" : \\"\\",\\"type\\" : 1}]",InterativeText:"Â§4Â§lCreated using the Nifty Building Tool by Brutus314 and Clawsky123."},TicksLeftToStay:0}`;
-    }
-
-    function commandToNBT(command) {
-        const jsonCommand = JSON.stringify({
-            cmd_line : command,
-            cmd_ver : 12
-        });
-        return jsonCommand.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`);
-    }
-
-
-    // --- Add Event Listeners for Settings elements ---
-    if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
-        musicVolumeInput.addEventListener('input', handleMusicVolumeChange);
-         // Initial display is set in showSection('settingsTool')
-    }
-     if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
-        sfxVolumeInput.addEventListener('input', handleSfxVolumeChange);
-         // Initial display and lastValue are set in showSection('settingsTool')
-     }
-     if (toggleMusicBtn && backgroundMusic) {
-        toggleMusicBtn.addEventListener('click', toggleMusicPlayback);
-         // Initial button text is set in showSection('settingsTool')
-     }
+    // The main processing function for NBT conversion is triggered by the file input change
 
 
     // --- Initial Page Load: Show Default Section ---
-     showSection('homeTool');
+    // Show the Home section when the page finishes loading
+     showSection('homeTool'); // Call showSection with the ID of the home section
 
 
 }); // End of DOMContentLoaded listener
