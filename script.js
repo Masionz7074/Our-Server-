@@ -1,10 +1,52 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Global Elements and Tab Functionality ---
+    // --- Get ALL Element References FIRST ---
+    // Global Elements and Tab Functionality
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Function Pack Creator Tool Elements
+    const prepareFilesBtn = document.getElementById('prepareFilesBtn');
+    const generateAndDownloadPackBtn = document.getElementById('generateAndDownloadPackBtn');
+    const packNameInput = document.getElementById('packName');
+    const packDescriptionInput = document.getElementById('packDescription');
+    const packIconInput = document.getElementById('packIcon');
+    const presetListDiv = document.getElementById('presetList');
+    const selectedPresetsListUl = document.getElementById('selectedPresetsList');
+    const packStatusDiv = document.getElementById('packStatus');
+    const fileEditorArea = document.getElementById('fileEditorArea');
+    const editableFileListDiv = document.getElementById('editableFileList');
+    const fileEditorTextarea = document.getElementById('fileEditor');
+    const editorStatusDiv = document.getElementById('editorStatus');
+
+    // QR Code to MCFunction Tool Elements
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const processingCanvas = document.getElementById('processingCanvas');
+    const ctx = processingCanvas ? processingCanvas.getContext('2d') : null; // Check if canvas exists
+    const convertButton = document.getElementById('convertButton');
+    const outputCommands = document.getElementById('outputCommands');
+    const copyButton = document.getElementById('copyButton');
+    const downloadButton = document.getElementById('downloadButton');
+    const imageStatusMessage = document.getElementById('imageStatusMessage');
+    const pixelRatioInput = document.getElementById('pixelRatio');
+    const baseHeightInput = document.getElementById('baseHeight');
+    const zOffsetInput = document.getElementById('zOffset');
+    const ditheringEnabledInput = document.getElementById('ditheringEnabled');
+    const thresholdInput = document.getElementById('threshold'); // Threshold input
+
+    // MCFunction to Nifty Building Tool NBT Elements
+    const nbtStatusMessage = document.getElementById('nbtStatusMessage');
+    const nbtFileInput = document.getElementById('input-file');
+    const nbtTitleInput = document.getElementById('nbt-title');
+    const commandsPerNpcInput = document.getElementById('commands-per-npc');
+
+    // Audio Element
+    const clickSound = document.getElementById('clickSound');
+
+
+    // --- Tab Functionality ---
     function openTab(tabId) {
         // Hide all tab contents
         tabContents.forEach(content => {
@@ -23,10 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Activate the clicked button
-        // Use a simple loop or find method as querySelector with complex selectors can be tricky
+        // Use a simple loop to find the button based on the tabId
          let clickedButton = null;
          for (const button of tabButtons) {
-             if (button.getAttribute('onclick') && button.getAttribute('onclick').includes(`openTab('${tabId}')`)) {
+             const onclickAttr = button.getAttribute('onclick');
+             if (onclickAttr && onclickAttr.includes(`openTab('${tabId}')`)) {
                  clickedButton = button;
                  break;
              }
@@ -35,15 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
             clickedButton.classList.add('active');
         }
 
-         // --- IMPORTANT: Perform initial setup for the specific tab being opened ---
-         // This ensures elements within the tab are ready when needed
+         // --- Initial setup for the specific tab being opened ---
          if (tabId === 'functionPackTool') {
-             // Initial render for function pack presets
+             // Render the preset lists when the function pack tab is opened
              renderPresetList();
-             // Reset editor area state if switching back to this tab (optional, depends on desired behavior)
-             // resetEditorArea(); // Decide if you want to reset on every tab switch
+             // The editor area state is handled by the prepare/reset logic
          } else if (tabId === 'qrTool') {
-             // QR tool has threshold slider setup that needs to run
+             // Ensure the threshold slider display and CSS variable are updated
              if (thresholdInput) {
                  const thresholdValueSpan = document.getElementById('thresholdValue');
                  const updateThresholdDisplay = () => {
@@ -52,21 +93,18 @@ document.addEventListener('DOMContentLoaded', () => {
                      }
                      thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
                  };
-                 // Add/re-add the listener and update immediately
-                 thresholdInput.removeEventListener('input', updateThresholdDisplay); // Remove old listener if any
-                 thresholdInput.addEventListener('input', updateThresholdDisplay);
-                 updateThresholdDisplay(); // Update immediately on tab switch/load
+                 // Update immediately when tab is opened
+                 updateThresholdDisplay();
+                 // Note: The event listener for 'input' is added later with other listeners
              }
          } else if (tabId === 'nbtTool') {
              // NBT tool doesn't have complex initial setup needed on tab switch
          }
     }
 
-    // Add event listeners for tab buttons using delegation or direct attachment
-    // Direct attachment is fine here and perhaps clearer
+    // Add event listeners for tab buttons
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Extract tabId from the onclick attribute
             const onclickAttr = button.getAttribute('onclick');
             const match = onclickAttr.match(/openTab\('(.+?)'\)/);
             if (match && match[1]) {
@@ -76,27 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Initial Page Load Setup ---
-    // Open the first tab (Function Pack Creator) by default immediately after tab logic is defined
-    openTab('functionPackTool');
+    // --- Initial Page Load: Open Default Tab ---
+    openTab('functionPackTool'); // Open the Function Pack Creator tab first
 
 
-    // --- Function Pack Creator Tool Logic (Element references now happen AFTER initial tab open) ---
-    // Get element references *after* the initial tab is made visible
-    const prepareFilesBtn = document.getElementById('prepareFilesBtn');
-    const generateAndDownloadPackBtn = document.getElementById('generateAndDownloadPackBtn');
-    const packNameInput = document.getElementById('packName');
-    const packDescriptionInput = document.getElementById('packDescription');
-    const packIconInput = document.getElementById('packIcon');
-    const presetListDiv = document.getElementById('presetList');
-    const selectedPresetsListUl = document.getElementById('selectedPresetsList');
-    const packStatusDiv = document.getElementById('packStatus');
-
-    // Elements for the new editor area
-    const fileEditorArea = document.getElementById('fileEditorArea');
-    const editableFileListDiv = document.getElementById('editableFileList');
-    const fileEditorTextarea = document.getElementById('fileEditor');
-    const editorStatusDiv = document.getElementById('editorStatus');
+    // --- Function Pack Creator Tool Logic ---
+    // State variables for Function Pack Creator
+    let selectedPresetIds = new Set();
+    let editableFiles = new Map(); // filename (relative to functions/) -> content string
+    let currentEditingFile = null; // Track which file is currently in the textarea
 
 
     // --- Preset Definitions (Same as before) ---
@@ -106,12 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'on_first_join', name: 'On First Join', description: 'Runs a function when a player joins the world for the first time.', objectives: [{ name: "has_joined", type: "dummy" }], setup_commands: [], main_commands: ['# Check for players who have just joined', 'execute as @a unless score @s has_joined matches 1 run function <pack_namespace>:on_first_join_action', '# Mark players as having joined', 'scoreboard players set @a[scores={has_joined=..0}] has_joined 1'], additional_files: [{ filename: "on_first_join_action.mcfunction", content: "# This function runs on a player's first join.\n# Add commands here.\n# Example: Send a welcome message\ntellraw @s {\"text\":\"Welcome to the world!\",\"color\":\"gold\"}" }] }
         // Add more presets here
     ];
-
-    // State for Function Pack Creator
-    let selectedPresetIds = new Set();
-    let editableFiles = new Map();
-    let currentEditingFile = null;
-
 
     // --- Helper Functions for Function Pack Creator ---
 
@@ -147,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  selectedPresetsListUl.appendChild(li);
             }
          });
-         renderPresetList();
+         renderPresetList(); // Re-render available list
          // Hide editor area and disable download button when presets change
          resetEditorArea();
     }
@@ -185,11 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Editor Management ---
 
     function resetEditorArea() {
-        // Check all necessary elements exist before manipulating
         if (!fileEditorArea || !fileEditorTextarea || !editableFileListDiv || !editorStatusDiv || !generateAndDownloadPackBtn || !prepareFilesBtn) {
              console.warn("Attempted to reset editor area before all elements are available.");
-             // This might happen if reset is called on DOMContentLoaded before all elements are found.
-             // We can just return if elements aren't found yet.
              return;
         }
         fileEditorArea.style.display = 'none';
@@ -226,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadFileIntoEditor(filename) {
-        // Check all necessary elements exist
         if (!fileEditorTextarea || !editableFiles.has(filename) || !editableFileListDiv || !editorStatusDiv) {
              console.warn("Attempted to load file into editor before all elements are available or file missing:", filename);
              return;
@@ -348,14 +364,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // --- Store Content for Editing ---
-        // Store filenames relative to the functions/[namespace] folder
+        // Store filenames relative to the functions/ folder root for easier zipping later
          editableFiles.set(`${packNamespace}/main.mcfunction`, mainCommands.join('\n'));
          editableFiles.set(`${packNamespace}/objectives.mcfunction`, objectiveCommands.join('\n'));
          editableFiles.set(`${packNamespace}/setup.mcfunction`, setupCommands.join('\n'));
 
          // Add additional files from presets to the editable list
          additionalPresetFiles.forEach(file => {
-            // These should already have the namespace path included if designed that way
+            // Assume preset filenames include the namespace path if needed, or add it here
+            // E.g., 'on_death_action.mcfunction' becomes 'my_pack/on_death_action.mcfunction'
              editableFiles.set(`${packNamespace}/${file.filename}`, file.content);
          });
 
@@ -369,10 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
          if (editableFiles.has(firstFile)) {
              loadFileIntoEditor(firstFile);
          } else if (editableFiles.size > 0) {
-             // Fallback to the first file in the map if main.mcfunction wasn't generated for some reason
+             // Fallback to the first file in the map if main.mcfunction wasn't generated
               loadFileIntoEditor(editableFiles.keys().next().value);
          } else {
-              // Should not happen with core files, but good fallback
              editorStatusDiv.textContent = 'No editable files were generated.';
              if (fileEditorTextarea) fileEditorTextarea.value = '';
          }
@@ -454,11 +470,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add tick.json directly inside the functions folder
         functionsFolder.file("tick.json", tickJsonContent);
 
-        // Add editable files from the map into their correct paths (inside functions/[namespace])
-        editableFiles.forEach((content, filename) => {
-            // The keys in editableFiles are already functions/[namespace]/filename.mcfunction
-            // So we can add them directly relative to the zip root
-             zip.file(`functions/${filename}`, content);
+        // Add editable files from the map (filenames in map are already functions/[namespace]/filename.mcfunction)
+        editableFiles.forEach((content, fullPath) => {
+            zip.file(`functions/${fullPath}`, content);
         });
 
 
@@ -480,7 +494,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Add event listeners for Function Pack tab elements (Ensure elements exist)
+    // --- Add all Event Listeners for Function Pack tab elements ---
+    // These are added after all elements are referenced and the initial tab is open
     if (prepareFilesBtn) prepareFilesBtn.addEventListener('click', prepareFilesForEditing);
     if (generateAndDownloadPackBtn) generateAndDownloadPackBtn.addEventListener('click', generateAndDownloadPack);
     if (presetListDiv) presetListDiv.addEventListener('click', handlePresetButtonClick); // Delegation for Add/Remove
@@ -496,36 +511,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fileEditorTextarea) {
          // Listen for input to save changes as user types
          fileEditorTextarea.addEventListener('input', handleEditorInput);
-         // Optional: save on blur too, might be less frequent but guarantees save
-         // fileEditorTextarea.addEventListener('blur', handleEditorInput);
+          // fileEditorTextarea.addEventListener('blur', handleEditorInput); // Optional save on blur
     }
 
 
     // --- QR Code to MCFunction Tool Logic ---
-    // Get element references for the first tool
-    const imageInput = document.getElementById('imageInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const processingCanvas = document.getElementById('processingCanvas');
-    const ctx = processingCanvas ? processingCanvas.getContext('2d') : null;
-    const convertButton = document.getElementById('convertButton');
-    const outputCommands = document.getElementById('outputCommands');
-    const copyButton = document.getElementById('copyButton');
-    const downloadButton = document.getElementById('downloadButton');
-    const imageStatusMessage = document.getElementById('imageStatusMessage');
-
-    const pixelRatioInput = document.getElementById('pixelRatio');
-    const baseHeightInput = document.getElementById('baseHeight');
-    const zOffsetInput = document.getElementById('zOffset');
-    const ditheringEnabledInput = document.getElementById('ditheringEnabled');
-    const thresholdInput = document.getElementById('threshold');
-
-     // --- Minecraft Block Color Palette (Only Black Concrete and White Wool) ---
-    const minecraftPalette = [
-         { id: 'minecraft:black_concrete', color: [18, 20, 26] },
-         { id: 'minecraft:white_wool', color: [242, 242, 242] }
-    ];
-
-    // --- Event Listener for File Input (Image Tool) ---
+    // Event Listener for File Input (Image Tool)
     if (imageInput) {
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -561,21 +552,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add listener for range slider value update and CSS variable
-    // This listener setup is now also included in openTab for qrTool
-    // Keep this here for initial load *if* qrTool is the default tab later
-    // But it's safer to rely on the openTab setup for the initial display.
-    /*
+    // Add listener for range slider value update and CSS variable (only needed once)
     if (thresholdInput) {
-        const thresholdValueSpan = document.getElementById('thresholdValue');
-        const updateThresholdDisplay = () => { ... };
-        thresholdInput.addEventListener('input', updateThresholdDisplay);
-        updateThresholdDisplay();
+         const thresholdValueSpan = document.getElementById('thresholdValue');
+         const updateThresholdDisplay = () => {
+             if (thresholdValueSpan) {
+                thresholdValueSpan.textContent = thresholdInput.value;
+             }
+             thresholdInput.style.setProperty('--threshold-progress', `${(thresholdInput.value / 255) * 100}%`);
+         };
+         // Add listener here. Initial update is handled in openTab for qrTool.
+         thresholdInput.addEventListener('input', updateThresholdDisplay);
     }
-    */
 
 
-    // --- Event Listener for Convert Button (Image Tool) ---
+    // Event Listener for Convert Button (Image Tool)
     if (convertButton) {
         convertButton.addEventListener('click', function() {
             if (!imagePreview || !imagePreview.src || imagePreview.src === '#' || !ctx || !processingCanvas) {
@@ -601,8 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-     // --- Helper Function to Find Closest Color (Image Tool) ---
-    function findClosestColor(pixelColor, palette) {
+     // Helper Function to Find Closest Color (Image Tool)
+    function findClosestColor(pixelColor, palette) { // Removed threshold param here, get from input
         const black = palette[0];
         const white = palette[1];
 
@@ -611,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const b = pixelColor[2];
 
         const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-         const threshold = parseInt(document.getElementById('threshold').value) || 128;
+         const threshold = parseInt(document.getElementById('threshold').value) || 128; // Get threshold value here
 
         if (luminance < threshold) {
             return black;
@@ -620,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-     // --- Dithering Helper Function (Image Tool) ---
+     // Dithering Helper Function (Image Tool)
      function diffuseError(workingPixels, width, height, px, py, er, eg, eb, weight) {
          if (px >= 0 && px < width && py >= 0 && py < height) {
              const idx = (py * width + px) * 4;
@@ -632,9 +623,9 @@ document.addEventListener('DOMContentLoaded', () => {
          }
      }
 
-     // --- Process Image Function (Image Tool) ---
+     // Process Image Function (Image Tool)
     function processImage(img) {
-        if (!ctx || !processingCanvas || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton || !thresholdInput) { // Added thresholdInput check
+        if (!ctx || !processingCanvas || !pixelRatioInput || !baseHeightInput || !zOffsetInput || !ditheringEnabledInput || !outputCommands || !imageStatusMessage || !convertButton || !copyButton || !downloadButton || !thresholdInput) {
              console.error("Missing required elements for image processing.");
              if(imageStatusMessage) imageStatusMessage.textContent = 'Internal error: Missing elements.';
              if(convertButton) convertButton.disabled = false;
@@ -645,7 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseHeight = parseInt(baseHeightInput.value) || 64;
         const zOffset = parseInt(zOffsetInput.value) || 0;
         const ditheringEnabled = ditheringEnabledInput.checked;
-         const threshold = parseInt(thresholdInput.value) || 128; // Get threshold here
+         // Threshold is obtained inside findClosestColor now
+
 
         if (pixelRatio < 1) {
              imageStatusMessage.textContent = 'Pixels per Block must be at least 1.';
@@ -696,8 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                  if (pixelA > 10) {
                      const originalColor = [pixelR, pixelG, pixelB];
-                     // Pass threshold to findClosestColor
-                     matchedBlock = findClosestColor(originalColor, minecraftPalette, threshold);
+                     matchedBlock = findClosestColor(originalColor, minecraftPalette); // Threshold is read inside
 
                      finalColorForCanvas = matchedBlock.color;
 
@@ -716,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                  } else {
                     // If pixel is transparent or very low alpha, place a white block
-                     matchedBlock = findClosestColor([255, 255, 255], minecraftPalette); // Transparent/white default matches white wool
+                     matchedBlock = findClosestColor([255, 255, 255], minecraftPalette);
                      finalColorForCanvas = matchedBlock.color;
                      commands.push(`setblock ~${x} ~${y + baseHeight} ~${zOffset} ${matchedBlock.id}`);
                  }
@@ -734,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadButton.disabled = commands.length === 0;
     }
 
-    // --- Copy Button Functionality (Image Tool) ---
+    // Copy Button Functionality (Image Tool)
     if (copyButton) {
         copyButton.addEventListener('click', function() {
             if (!outputCommands) return;
@@ -755,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Download Button Functionality (Image Tool) ---
+    // Download Button Functionality (Image Tool)
     if (downloadButton) {
          downloadButton.addEventListener('click', function() {
              if (!outputCommands || !imageStatusMessage) return;
@@ -771,11 +762,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- MCFunction to Nifty Building Tool NBT Converter Logic ---
-    const nbtStatusMessage = document.getElementById('nbtStatusMessage');
-    const nbtFileInput = document.getElementById('input-file');
-    const nbtTitleInput = document.getElementById('nbt-title');
-    const commandsPerNpcInput = document.getElementById('commands-per-npc');
-
     if (nbtFileInput) {
         nbtFileInput.addEventListener('change', getNBTFile);
     }
@@ -924,4 +910,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-});
+
+    // --- Sound on Click Logic ---
+    function playClickSound() {
+        if (clickSound) {
+            clickSound.currentTime = 0; // Rewind to the start
+            clickSound.play().catch(e => console.error("Error playing sound:", e)); // Play and catch potential errors
+        }
+    }
+
+    // Add event listener to play sound on button clicks
+    document.body.addEventListener('click', (event) => {
+        // Check if the clicked element or its closest ancestor is a button
+        const clickedElement = event.target;
+        const button = clickedElement.closest('button');
+
+        // If a button was clicked and it's not disabled, play the sound
+        if (button && !button.disabled) {
+            // Exclude the range slider thumb itself, as it can be clicked/dragged frequently
+             // Check if the button is NOT inside a range input's structure (this is a bit of a hack)
+             const isRangeThumbClick = event.target.type === 'range';
+             if (!isRangeThumbClick) {
+                playClickSound();
+             }
+        }
+         // You could add other elements here if you want sounds on clicks elsewhere (e.g., list items)
+         // else if (clickedElement.closest('#presetList li') || clickedElement.closest('#selectedPresetsList li')) {
+         //     playClickSound();
+         // }
+    });
+
+
+}); // End of DOMContentLoaded
