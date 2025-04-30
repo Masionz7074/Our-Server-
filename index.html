@@ -22,7 +22,7 @@
         <div id="functionPackTool" class="tab-content">
             <div class="container">
                 <h1>Minecraft Function Pack Generator</h1>
-                <p>Easily create a basic Minecraft Bedrock Edition function pack.</p>
+                <p>Easily create a basic Minecraft Bedrock Edition function pack. This tool generates the pack directly, without in-browser editing.</p> <!-- Updated description -->
 
                 <div class="pack-info section">
                     <h2>Pack Information</h2>
@@ -54,28 +54,16 @@
                     </div>
                 </div>
 
-                <!-- New button to trigger file preparation -->
-                 <button id="prepareFilesBtn">Prepare Files for Editing</button>
+                <!-- Main Generate Button (Renamed) -->
+                <button id="generateBtn">Generate Pack</button>
 
-                <!-- New section for file editing -->
-                <div id="fileEditorArea" class="section" style="display: none;">
-                    <h2>Edit Function Files</h2>
-                     <div id="editorStatus" class="status-message">Select a file to edit.</div>
-                    <div id="editableFileList">
-                        <!-- File buttons will be listed here by JavaScript -->
-                    </div>
-                    <textarea id="fileEditor" placeholder="// Select a file from the list above to edit its content..."></textarea>
-                </div>
-
-                <!-- Renamed generate button, disable by default until files are prepared -->
-                <button id="generateAndDownloadPackBtn" disabled>Generate & Download Pack</button>
-
+                <!-- Status message -->
                 <div id="packStatus"></div>
             </div>
         </div>
 
 
-        <!-- QR Code to MCFunction Tab Content -->
+        <!-- QR Code to MCFunction Tab Content (Same as before) -->
         <div id="qrTool" class="tab-content" style="display:none;">
              <div class="container">
                 <h1>QR Code Image to Pixel Art</h1>
@@ -130,7 +118,7 @@
             </div>
         </div>
 
-        <!-- MCFunction to NBT Converter Tab Content -->
+        <!-- MCFunction to NBT Converter Tab Content (Same as before) -->
         <div id="nbtTool" class="tab-content" style="display:none;">
             <div class="container">
                  <h1>MCFunction to Nifty Building Tool NBT</h1>
@@ -167,6 +155,11 @@
     <!-- Audio element for click sound -->
     <!-- You will need to provide a file named 'button_click.mp3' in a 'sounds' folder -->
     <audio id="clickSound" src="sounds/button_click.mp3" preload="auto"></audio>
+
+    <!-- Audio element for background music -->
+    <!-- You will need to provide a file named 'background.mp3' in a 'sounds' folder -->
+    <audio id="backgroundMusic" src="sounds/background.mp3" loop preload="auto"></audio>
+
 
     <!-- Link to the external JavaScript file -->
     <script src="script.js"></script>
