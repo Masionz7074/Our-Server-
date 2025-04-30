@@ -294,89 +294,80 @@ textarea::placeholder {
 }
 
 
-.button-group {
-    margin-top: 15px;
-    margin-bottom: 0;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
+/* Unified Button Styling */
 button {
     display: inline-block;
     padding: 10px 15px;
-    background-color: #4a4645; /* Button color */
+    background-color: #4a4645; /* Base Button Color */
     color: #ffffff;
-    border: 2px solid #171614;
+    border: 2px solid #171614; /* Dark Border */
     font-family: 'Minecraftia', monospace;
     font-size: 1em;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
     box-sizing: border-box;
     border-radius: 4px;
-     text-shadow: 1px 1px #000000;
+     text-shadow: 1px 1px #000000; /* Text Shadow */
      min-width: 100px;
+     text-align: center; /* Ensure text is centered */
 }
 
+/* Button Hover State */
 button:hover {
-    background-color: #5a5655; /* Darker hover color */
+    background-color: #5a5655; /* Slightly lighter on hover */
+    border-color: #ffffff; /* White border on hover */
 }
+
+/* Button Active State (Pressing) */
 button:active {
+    background-color: #3a3837; /* Darker when pressed */
+    border-color: #aaaaaa; /* Lighter border when pressed */
     transform: translateY(1px); /* Simple press effect */
 }
 
-
+/* Button Disabled State */
 button:disabled {
-    background-color: #555555;
-    color: #aaaaaa;
+    background-color: #555555; /* Dark gray disabled */
+    color: #aaaaaa; /* Lighter gray text disabled */
+    border-color: #444444; /* Darker border disabled */
     cursor: not-allowed;
     box-shadow: none;
     text-shadow: none;
+    transform: none; /* No press effect when disabled */
 }
 
-/* Specific styles for preset list buttons */
+/* Specific styles for preset list buttons (Override some general styles) */
 #presetList li button {
     width: auto; /* Override full width */
     padding: 4px 8px;
     font-size: 0.9em;
      min-width: auto;
      margin-left: 10px;
+     background-color: #4a4645; /* Match general button background */
+     border-color: #171614; /* Match general button border */
+     text-shadow: 1px 1px #000000;
 }
+#presetList li button:hover {
+     background-color: #5a5655;
+     border-color: #ffffff;
+}
+#presetList li button:active {
+     background-color: #3a3837;
+     border-color: #aaaaaa;
+}
+
 
 #selectedPresetsList li button {
-     background-color: #c0392b; /* Red for remove */
-     border-color: #a02c1e;
+     background-color: #c0392b; /* Red background for remove */
+     border-color: #a02c1e; /* Darker red border */
 }
 #selectedPresetsList li button:hover {
-     background-color: #e74c3c;
+     background-color: #e74c3c; /* Lighter red on hover */
      border-color: #c0392b;
 }
-
-/* Styles for the editable file list buttons */
-#editableFileList {
-    margin-bottom: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px; /* Space between file buttons */
-     border-bottom: 1px solid #171614; /* Separator */
-     padding-bottom: 10px;
-}
-#editableFileList button {
-    padding: 5px 10px;
-    font-size: 0.9em;
-    background-color: rgba(0, 0, 0, 0.2); /* Subtle background */
-    border: 1px solid #171614;
-     min-width: auto;
-     text-shadow: none;
-}
-#editableFileList button:hover {
-    background-color: rgba(0, 0, 0, 0.4);
-}
-#editableFileList button.active {
-    background-color: #4a4645; /* Highlight active file */
-     border-color: #ffffff; /* White border for active */
-     font-weight: bold;
+#selectedPresetsList li button:active {
+     background-color: #a02c1e; /* Darker red when pressed */
+     border-color: #e74c3c;
 }
 
 
@@ -401,9 +392,9 @@ button:disabled {
 #presetList li small { color: #c0c0c0; }
 
 
-.status-message, #packStatus, #editorStatus { /* Combined status styles */
-    margin-top: 10px; /* Reduced margin */
-    margin-bottom: 10px; /* Reduced margin */
+.status-message, #packStatus, #imageStatusMessage, #nbtStatusMessage { /* Combined status styles */
+    margin-top: 10px;
+    margin-bottom: 10px;
     text-align: center;
     color: #ffffa0; /* Yellowish color for status */
      min-height: 1.2em;
@@ -559,15 +550,5 @@ button:disabled {
            margin-top: 5px;
             align-self: flex-end;
        }
-
-     #editableFileList {
-         flex-direction: column;
-         gap: 3px;
-     }
-     #editableFileList button {
-         width: 100%;
-         text-align: left;
-         padding: 6px 10px;
-     }
 
 }
