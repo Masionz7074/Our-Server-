@@ -9,13 +9,29 @@
 
 :root {
     --sidebar-width: 250px; /* Define sidebar width */
-    --hamburger-size: 40px; /* Define hamburger button size */
+    --hamburger-size: 32px; /* Smaller hamburger button size */
+    --line-height: 4px; /* Height of the lines */
+    --line-spacing: 4px; /* Space between lines */
     --sidebar-bg-color: #211F20; /* Accent background for sidebar */
     --main-bg-color: #171614; /* Main background */
     --border-color: #171614; /* Dark border color */
     --text-color: #ffffff; /* White text */
     --accent-color: #ffffff; /* White accent (used for active states, borders etc) */
-     --text-shadow: 2px 2px #000000; /* Simple text shadow */
+     --text-shadow-dark: 2px 2px #000000; /* Simple dark text shadow */
+     --text-shadow-light: 1px 1px #aaaaaa; /* Subtle light text shadow */
+     --button-bg-dark: #4a4645; /* Dark button background */
+     --button-bg-hover: #5a5655; /* Darker hover */
+     --button-bg-active: #3a3837; /* Even darker active */
+     --button-border-dark: #171614; /* Dark button border */
+     --button-border-hover: #ffffff; /* White border on hover */
+     --button-border-active: #aaaaaa; /* Lighter border on active */
+     --button-disabled-bg: #555555;
+     --button-disabled-color: #aaaaaa;
+     --button-disabled-border: #444444;
+     --red-remove-bg: #c0392b; /* Red for remove buttons */
+     --red-remove-hover: #e74c3c;
+     --red-remove-active: #a02c1e;
+     --red-remove-border: #a02c1e;
 }
 
 
@@ -24,16 +40,15 @@ body {
     background-color: var(--main-bg-color);
     color: var(--text-color);
     margin: 0;
-    padding: 0; /* Remove padding here, main content handles it */
+    padding: 0;
     display: flex;
-    /* No need for flex center/start here, body just contains sidebar and main content */
     min-height: 100vh;
-    overflow-x: hidden; /* Hide horizontal scrollbar caused by sidebar transition */
+    overflow-x: hidden;
 }
 
 /* --- Sidebar and Main Content Layout --- */
 #sidebar {
-    position: fixed; /* Fixed position so it stays visible */
+    position: fixed;
     left: 0;
     top: 0;
     width: var(--sidebar-width);
@@ -42,37 +57,39 @@ body {
     border-right: 4px solid var(--border-color);
     padding: 20px;
     box-sizing: border-box;
-    transform: translateX(-100%); /* Start off-screen */
-    transition: transform 0.3s ease; /* Smooth slide animation */
-    z-index: 100; /* Ensure sidebar is above content */
-    display: flex; /* Use flex for column layout */
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 100;
+    display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Push footer to the bottom */
-    overflow-y: auto; /* Add scrollbar if menu is too long */
+    justify-content: space-between;
+    overflow-y: auto;
 }
 
 #sidebar.open {
-    transform: translateX(0); /* Slide in */
+    transform: translateX(0);
 }
 
 .main-content {
-    flex-grow: 1; /* Take remaining space */
-    padding: 20px; /* Add padding to the content area */
-    margin-left: 0; /* Start with no margin */
-    transition: margin-left 0.3s ease; /* Smooth shift animation */
-     /* Add margin when sidebar is open */
-    /* This is handled by JS adding a class to body or main-content */
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 0; /* Starts with no margin */
+    transition: margin-left 0.3s ease;
+     /* On larger screens, push content when sidebar is open */
 }
 
-body.sidebar-open .main-content {
-     margin-left: var(--sidebar-width);
+@media (min-width: 769px) { /* Apply this only on wider screens */
+    body.sidebar-open .main-content {
+         margin-left: var(--sidebar-width); /* Shift content by sidebar width */
+    }
 }
+
 
 /* --- Hamburger Icon --- */
 #hamburgerBtn {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 15px; /* Move higher */
+    left: 15px; /* Move further left */
     width: var(--hamburger-size);
     height: var(--hamburger-size);
     padding: 0;
@@ -81,27 +98,40 @@ body.sidebar-open .main-content {
     border-radius: 4px;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: center; /* Center lines vertically */
     align-items: center;
     cursor: pointer;
-    z-index: 101; /* Ensure icon is above sidebar */
-    transition: left 0.3s ease; /* Shift icon with sidebar */
+    z-index: 101;
+    transition: left 0.3s ease, background-color 0.2s ease, border-color 0.2s ease;
+     /* Use gap for spacing, fallback with margin */
+    gap: var(--line-spacing);
 }
 
 #hamburgerBtn .line {
     width: 70%;
-    height: 4px;
+    height: var(--line-height);
     background-color: var(--text-color);
     border-radius: 2px;
     transition: background-color 0.1s ease;
 }
 
+#hamburgerBtn:hover {
+    background-color: var(--button-bg-hover);
+    border-color: var(--accent-color);
+}
+#hamburgerBtn:active {
+     background-color: var(--button-bg-active);
+     border-color: var(--button-border-active);
+}
 #hamburgerBtn:hover .line {
-    background-color: #cccccc; /* Slightly lighter on hover */
+    background-color: #cccccc;
 }
 
-body.sidebar-open #hamburgerBtn {
-     left: calc(var(--sidebar-width) + 20px); /* Shift icon when sidebar is open */
+/* Prevent hamburger shifting with content on wider screens */
+@media (min-width: 769px) {
+     body.sidebar-open #hamburgerBtn {
+         left: calc(var(--sidebar-width) + 15px); /* Shift icon by sidebar width + gap */
+     }
 }
 
 
@@ -109,7 +139,7 @@ body.sidebar-open #hamburgerBtn {
 .sidebar-header h2 {
     text-align: center;
     color: var(--accent-color);
-    text-shadow: var(--text-shadow);
+    text-shadow: var(--text-shadow-dark);
     margin-top: 0;
     margin-bottom: 20px;
     border-bottom: 2px solid var(--border-color);
@@ -120,7 +150,7 @@ body.sidebar-open #hamburgerBtn {
     list-style: none;
     padding: 0;
     margin: 0;
-    flex-grow: 1; /* Allow menu to take available space */
+    flex-grow: 1;
 }
 
 .sidebar-menu li {
@@ -129,39 +159,39 @@ body.sidebar-open #hamburgerBtn {
 
 .sidebar-link {
     /* Base button styles */
-     display: block; /* Make buttons fill list item width */
+     display: block;
      width: 100%;
      padding: 10px;
-     background-color: transparent; /* Transparent background */
+     background-color: transparent;
      color: var(--text-color);
      border: 2px solid transparent; /* Transparent border initially */
      border-radius: 4px;
      font-family: 'Minecraftia', monospace;
      font-size: 1em;
-     text-align: left; /* Align text left */
+     text-align: left;
      cursor: pointer;
      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-     text-shadow: none; /* Remove text shadow on sidebar links */
+     text-shadow: none;
+     /* Remove default button press effect for sidebar links */
+     transform: none !important;
 }
 
 .sidebar-link:hover {
-    background-color: rgba(0, 0, 0, 0.2); /* Subtle dark hover */
+    background-color: rgba(0, 0, 0, 0.2);
     border-color: var(--border-color);
     color: var(--accent-color);
 }
 
 .sidebar-link:active {
-    background-color: rgba(0, 0, 0, 0.4); /* Darker when pressed */
+    background-color: rgba(0, 0, 0, 0.4);
     border-color: var(--text-color);
-    transform: none; /* No vertical transform for sidebar links */
 }
 
-/* Style for the active sidebar link (when its section is shown) */
-/* Add a class like 'active-section' to the button via JS */
+/* Style for the active sidebar link */
 .sidebar-link.active-section {
-     background-color: rgba(0, 0, 0, 0.3); /* Highlight background */
-     border-color: var(--accent-color); /* White border for active */
-     color: var(--accent-color); /* White text for active */
+     background-color: rgba(0, 0, 0, 0.3);
+     border-color: var(--accent-color);
+     color: var(--accent-color);
      font-weight: bold;
 }
 
@@ -170,25 +200,21 @@ body.sidebar-open #hamburgerBtn {
     margin-top: 20px;
     padding-top: 10px;
     border-top: 2px solid var(--border-color);
-    text-align: center; /* Center the settings link */
-}
-/* Style for the Settings link */
-.sidebar-footer .sidebar-link {
-     text-align: center;
-     /* Specific styles if needed, e.g., different color */
+    text-align: center;
 }
 
 
 /* --- Content Sections --- */
 .content-section {
-    display: none; /* Hidden by default, shown by JS */
+    display: none; /* Hidden by default */
+    /* Add padding inside sections if the .container doesn't provide it */
+    /* padding: 20px; */ /* Already done by .main-content padding */
 }
 
 /* Home Page Specific Styles */
 #homeTool {
-     /* display: block; /* Should be set to block by JS on load */
      text-align: center;
-     padding-top: 50px; /* Add some space from the top */
+     padding-top: 50px;
 }
 #homeTool h1 {
      margin-bottom: 20px;
@@ -202,58 +228,62 @@ body.sidebar-open #hamburgerBtn {
 
 /* Settings Page Specific Styles */
 #settingsTool {
-     /* display: block; /* Should be set to block by JS when selected */
 }
  #settingsTool .section {
      margin-top: 20px;
-     text-align: center; /* Center contents */
+     text-align: center;
  }
   #settingsTool .option-group {
-      justify-content: center; /* Center options */
+      justify-content: center;
+      align-items: center; /* Ensure alignment */
+      flex-wrap: wrap;
   }
    #settingsTool .option-group label {
        min-width: 150px;
-       flex-basis: auto; /* Adjust basis */
+       flex-basis: auto;
        margin-right: 15px;
-       margin-bottom: 0; /* Reset margin bottom */
+       margin-bottom: 0;
        text-align: left;
    }
    #settingsTool .option-group input[type="range"] {
        width: 150px; /* Fixed width for sliders */
         flex-grow: 0;
         margin-right: 10px;
+        /* Ensure consistent vertical alignment */
+        vertical-align: middle;
    }
+    /* Adjust value span next to range */
    #settingsTool .option-group span {
-       flex-basis: auto; /* Don't force new line */
+       flex-basis: auto;
        text-align: left;
        margin-top: 0;
        padding-right: 0;
+        min-width: 40px; /* Give value span some width */
    }
    #toggleMusicBtn {
        margin-top: 20px;
    }
 
 
-/* --- General Tool Section Styles (Existing, keep these) --- */
+/* --- General Tool Section Styles (Existing) --- */
 .container {
-    /* Removed background, border, box-shadow, max-width, margin-top */
-    /* Padding is handled by .main-content */
-    background-color: transparent; /* Ensure transparent */
-    padding: 0; /* Remove padding */
+    /* This container is inside main-content and acts as a simple wrapper */
+    /* Its styles are minimal now, mostly relying on main-content padding */
+    background-color: transparent;
+    padding: 0;
     box-shadow: none;
     border: none;
     max-width: 100%;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin: 0 auto; /* Center the inner content horizontally */
     display: flex;
     flex-direction: column;
-    align-items: stretch;
+    align-items: stretch; /* Stretch to fill width */
 }
 
 h1, h2, h3 {
     text-align: center;
     color: var(--text-color);
-    text-shadow: var(--text-shadow);
+    text-shadow: var(--text-shadow-dark);
 }
 
 h2 {
@@ -261,50 +291,109 @@ h2 {
 }
 
 .section {
+    margin-bottom: 20px;
+    padding: 15px;
     border: 2px solid var(--border-color);
     background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
 }
 
+
 input[type="text"], input[type="file"], input[type="number"], textarea {
+     padding: 8px 6px;
      border: 2px solid var(--border-color);
      background-color: #3a3837;
      color: var(--text-color);
      font-family: 'Minecraftia', monospace;
+     box-sizing: border-box;
+      border-radius: 3px;
+      min-width: 100px;
 }
-textarea::placeholder {
-     color: #c0c0c0;
-}
+textarea { line-height: 1.5; }
+textarea::placeholder { color: #c0c0c0; opacity: 0.7; }
 
 
-/* --- Existing Button Styles (Refined) --- */
-/* Apply the unified button style defined earlier */
-/* Specific overrides for preset buttons remain */
-#presetList li button {
-     /* Keep existing overrides for padding, size, min-width, margin, text-align */
-     background-color: #4a4645; /* Match general button background */
-     border-color: #171614; /* Match general button border */
-     text-shadow: 1px 1px #000000;
-}
-#presetList li button:hover {
-     background-color: #5a5655;
-     border-color: #ffffff;
-}
-#presetList li button:active {
-     background-color: #3a3837;
-     border-color: #aaaaaa;
+/* --- Button Styling (Unified and Refined) --- */
+/* Apply general button styles */
+button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: var(--button-bg-dark);
+    color: var(--text-color);
+    border: 2px solid var(--button-border-dark);
+    font-family: 'Minecraftia', monospace;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    box-sizing: border-box;
+    border-radius: 4px;
+     text-shadow: var(--text-shadow-dark);
+     min-width: 120px; /* Slightly wider min-width for better appearance */
+     text-align: center;
 }
 
+/* Button Hover State */
+button:hover:not(:disabled) {
+    background-color: var(--button-bg-hover);
+    border-color: var(--button-border-hover);
+}
+
+/* Button Active State (Pressing) */
+button:active:not(:disabled) {
+    background-color: var(--button-bg-active);
+    border-color: var(--button-border-active);
+    transform: translateY(1px);
+}
+
+/* Button Disabled State */
+button:disabled {
+    background-color: var(--button-disabled-bg);
+    color: var(--button-disabled-color);
+    border-color: var(--button-disabled-border);
+    cursor: not-allowed;
+    box-shadow: none;
+    text-shadow: none;
+    transform: none;
+}
+
+/* Specific styles for preset list buttons (Override some general styles) */
+/* Target buttons directly within list items to ensure specificity */
+#presetList li button,
 #selectedPresetsList li button {
-     background-color: #c0392b; /* Red background for remove */
-     border-color: #a02c1e; /* Darker red border */
+    width: auto; /* Override full width if applied elsewhere */
+    padding: 4px 8px;
+    font-size: 0.9em;
+     min-width: auto; /* Override min-width */
+     margin-left: 10px;
+     /* Inherit/match general button colors unless specifically overridden below */
+     background-color: var(--button-bg-dark);
+     border-color: var(--button-border-dark);
+     text-shadow: var(--text-shadow-dark);
 }
-#selectedPresetsList li button:hover {
-     background-color: #e74c3c; /* Lighter red on hover */
-     border-color: #c0392b;
+#presetList li button:hover:not(:disabled),
+#selectedPresetsList li button:hover:not(:disabled) {
+     background-color: var(--button-bg-hover);
+     border-color: var(--button-border-hover);
 }
-#selectedPresetsList li button:active {
-     background-color: #a02c1e; /* Darker red when pressed */
-     border-color: #e74c3c;
+#presetList li button:active:not(:disabled),
+#selectedPresetsList li button:active:not(:disabled) {
+     background-color: var(--button-bg-active);
+     border-color: var(--button-border-active);
+}
+
+
+/* Style for the red "Remove" buttons in the selected presets list */
+#selectedPresetsList li button {
+     background-color: var(--red-remove-bg);
+     border-color: var(--red-remove-border);
+}
+#selectedPresetsList li button:hover:not(:disabled) {
+     background-color: var(--red-remove-hover);
+     border-color: var(--red-remove-bg); /* Darker border on hover */
+}
+#selectedPresetsList li button:active:not(:disabled) {
+     background-color: var(--red-remove-active);
+     border-color: var(--red-remove-hover); /* Lighter border on active */
 }
 
 
@@ -314,42 +403,46 @@ textarea::placeholder {
 }
 
 /* --- Responsive Adjustments --- */
-@media (max-width: 768px) { /* Adjust breakpoint for smaller screens */
+@media (max-width: 768px) {
     :root {
-        --sidebar-width: 100%; /* Full width sidebar on small screens */
+        --sidebar-width: 100%;
+        --hamburger-size: 32px;
+        --line-height: 3px; /* Smaller lines */
+        --line-spacing: 3px; /* Closer lines */
     }
 
     #sidebar {
-        transform: translateX(-100%); /* Hidden by default */
+        transform: translateX(-100%);
         width: var(--sidebar-width);
-        border-right: none; /* Remove right border */
-        border-bottom: 4px solid var(--border-color); /* Add bottom border */
-         padding: 15px; /* Adjust padding */
+        border-right: none;
+        border-bottom: 4px solid var(--border-color);
+         padding: 15px;
     }
      #sidebar.open {
-         transform: translateX(0); /* Slide in */
+         transform: translateX(0);
      }
 
     #hamburgerBtn {
-        top: 15px; /* Adjust position */
-        left: 15px; /* Adjust position */
-         background-color: var(--main-bg-color); /* Darker background */
+        top: 10px; /* Adjust position */
+        left: 10px; /* Adjust position */
+         background-color: var(--main-bg-color);
          border-color: var(--border-color);
-         z-index: 102; /* Ensure it's above everything */
+         z-index: 102;
     }
-    body.sidebar-open #hamburgerBtn {
-         left: 15px; /* Don't shift icon on small screen */
-    }
-
-     .main-content {
-         padding: 15px; /* Adjust padding */
-         margin-left: 0 !important; /* Ensure no margin on small screen */
-         margin-top: calc(var(--hamburger-size) + 20px); /* Add space below fixed icon */
+     /* Remove shift on mobile */
+     body.sidebar-open #hamburgerBtn {
+         left: 10px;
      }
 
-    /* Ensure sidebar covers content when open on small screens */
+
+     .main-content {
+         padding: 15px;
+         margin-left: 0 !important;
+         margin-top: calc(var(--hamburger-size) + 25px); /* Add space below fixed icon + some buffer */
+     }
+
     body.sidebar-open #sidebar {
-        height: 100vh; /* Cover the full viewport height */
+        height: 100vh;
     }
 
      /* Adjust layout for form/option groups */
@@ -391,6 +484,7 @@ textarea::placeholder {
           width: 100%;
            padding: 8px 10px;
            font-size: 0.95em;
+           min-width: auto; /* Allow to shrink to fit width */
       }
 
       /* Adjust preset list item layout */
@@ -399,22 +493,25 @@ textarea::placeholder {
            align-items: flex-start;
            padding: 6px;
       }
-       #presetList li button {
+       #presetList li button,
+       #selectedPresetsList li button { /* Apply to both Add and Remove */
            margin-top: 5px;
             margin-left: 0;
             align-self: flex-end; /* Align button to the right */
+            width: auto; /* Prevent full width */
+            min-width: 80px; /* Ensure button is still tappable */
        }
-        #selectedPresetsList li button {
-            margin-top: 5px;
-             align-self: flex-end;
-        }
 
     /* Settings Specific Mobile Adjustments */
     #settingsTool .option-group label {
-        min-width: auto; /* Override fixed width */
+        min-width: auto;
         flex-basis: auto;
     }
     #settingsTool .option-group input[type="range"] {
-        width: 100%; /* Make sliders full width */
+        width: 100%;
     }
+    #settingsTool .option-group span {
+        min-width: auto;
+    }
+
 }
