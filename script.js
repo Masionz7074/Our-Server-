@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // console.log("DOM fully loaded. Initializing application.");
 
     // --- Get ALL Element References FIRST ---
-    // This helps ensure elements exist before trying to interact with them
-    // and makes the code cleaner by using variables instead of repeated lookups.
 
     // Global Elements and Navigation
     const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -17,18 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentSections = document.querySelectorAll('.content-section');
 
     // Function Pack Creator Tool Elements
-    const functionPackToolSection = document.getElementById('functionPackTool'); // Get the section itself
+    // const functionPackToolSection = document.getElementById('functionPackTool'); // Not strictly needed as a variable here
     const generateBtn = document.getElementById('generateBtn');
     const packNameInput = document.getElementById('packName');
     const packDescriptionInput = document.getElementById('packDescription');
     const packIconInput = document.getElementById('packIcon');
     const presetListDiv = document.getElementById('presetList');
-    const selectedPresetsDiv = document.getElementById('selectedPresets'); // Get the container
+    // const selectedPresetsDiv = document.getElementById('selectedPresets'); // Not strictly needed as a variable here
     const selectedPresetsListUl = document.getElementById('selectedPresetsList');
     const packStatusDiv = document.getElementById('packStatus');
 
     // QR Code to MCFunction Tool Elements
-    const qrToolSection = document.getElementById('qrTool'); // Get the section itself
+    // const qrToolSection = document.getElementById('qrTool'); // Not strictly needed as a variable here
     const imageInput = document.getElementById('imageInput');
     const imagePreview = document.getElementById('imagePreview');
     const processingCanvas = document.getElementById('processingCanvas');
@@ -46,49 +44,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const thresholdValueSpan = document.getElementById('thresholdValue');
 
     // MCFunction to Nifty Building Tool NBT Elements
-    const nbtToolSection = document.getElementById('nbtTool'); // Get the section itself
+    // const nbtToolSection = document.getElementById('nbtTool'); // Not strictly needed as a variable here
     const nbtStatusMessage = document.getElementById('nbtStatusMessage');
     const nbtFileInput = document.getElementById('input-file');
     const nbtTitleInput = document.getElementById('nbt-title');
     const commandsPerNpcInput = document.getElementById('commands-per-npc');
 
-    // Settings Tool Elements
-    const settingsToolSection = document.getElementById('settingsTool'); // Get the section itself
-    const musicVolumeInput = document.getElementById('musicVolume');
-    const musicVolumeValueSpan = document.getElementById('musicVolumeValue');
+    // Settings Tool Elements (Only SFX remains)
+    // const settingsToolSection = document.getElementById('settingsTool'); // Not strictly needed as a variable here
+    // const musicVolumeInput = document.getElementById('musicVolume'); // Removed
+    // const musicVolumeValueSpan = document.getElementById('musicVolumeValue'); // Removed
     const sfxVolumeInput = document.getElementById('sfxVolume');
     const sfxVolumeValueSpan = document.getElementById('sfxVolumeValue');
-    const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+    // const toggleMusicBtn = document.getElementById('toggleMusicBtn'); // Removed
 
     // Audio Elements
     const clickSound = document.getElementById('clickSound');
-    const backgroundMusic = document.getElementById('backgroundMusic');
+    const backgroundMusic = document.getElementById('backgroundMusic'); // Keep reference
 
 
     // --- Set Initial Audio Volumes and State (Read from localStorage) ---
-    const MUSIC_VOLUME_STORAGE_KEY = 'minecraftToolsMusicVolume';
+    // const MUSIC_VOLUME_STORAGE_KEY = 'minecraftToolsMusicVolume'; // Removed
     const SFX_VOLUME_STORAGE_KEY = 'minecraftToolsSfxVolume';
 
+    // Configure background music (simplified)
     if (backgroundMusic) {
-        const savedMusicVolume = localStorage.getItem(MUSIC_VOLUME_STORAGE_KEY);
-        backgroundMusic.volume = savedMusicVolume !== null && !isNaN(parseFloat(savedMusicVolume)) ? parseFloat(savedMusicVolume) : 0.5;
-        backgroundMusic.loop = true;
+        backgroundMusic.src = 'sounds/background.mp3'; // Set the source
+        backgroundMusic.loop = true; // Loop the music
+        backgroundMusic.volume = 0.5; // Set a default volume (can be adjusted here if needed, but no slider)
         backgroundMusic.pause(); // Start paused
-        backgroundMusic.currentTime = 0;
-        backgroundMusic.muted = true; // Start muted to prevent autoplay issues
-        // console.log(`Initial Music Volume: ${backgroundMusic.volume}`);
+        backgroundMusic.currentTime = 0; // Start from the beginning
+        backgroundMusic.muted = true; // Start muted to prevent autoplay issues before interaction
+        // console.log(`Background music element found. Source set to ${backgroundMusic.src}.`);
     } else {
-        console.warn("Background music element not found. Music playback disabled.");
-        if (musicVolumeInput) musicVolumeInput.disabled = true;
-        if (toggleMusicBtn) toggleMusicBtn.disabled = true;
+        console.warn("Background music element with ID 'backgroundMusic' not found. Music playback disabled.");
     }
 
+     // Configure click sound (SFX remains)
      if (clickSound) {
         const savedSfxVolume = localStorage.getItem(SFX_VOLUME_STORAGE_KEY);
          clickSound.volume = savedSfxVolume !== null && !isNaN(parseFloat(savedSfxVolume)) ? parseFloat(savedSfxVolume) : 1.0;
          // console.log(`Initial SFX Volume: ${clickSound.volume}`);
      } else {
-         console.warn("Click sound element not found. SFX disabled.");
+         console.warn("Click sound element with ID 'clickSound' not found. SFX disabled.");
          if (sfxVolumeInput) sfxVolumeInput.disabled = true;
      }
 
@@ -146,10 +144,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update threshold display and track on section load
                     const updateThresholdDisplay = () => {
                         thresholdValueSpan.textContent = thresholdInput.value;
+                        // Ensure this CSS variable update is specific to the threshold slider
                         thresholdInput.style.setProperty('--threshold-progress', `${(parseFloat(thresholdInput.value) / 255) * 100}%`);
                     };
-                    // Ensure listener is attached only once outside this function
-                    updateThresholdDisplay(); // Call initially
+                    // Listener attached below, just call initially
+                    updateThresholdDisplay();
                 } else { console.warn("QR Tool threshold elements not found."); }
 
                  if (imagePreview) imagePreview.style.display = 'none'; // Hide preview
@@ -161,35 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (processingCanvas) processingCanvas.classList.remove('pixel-preview'); // Remove pixelated style
 
             } else if (sectionId === 'settingsTool') {
-                 // Update settings UI based on current audio state
-                 if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
-                     musicVolumeInput.value = backgroundMusic.volume;
-                     musicVolumeValueSpan.textContent = `${Math.round(backgroundMusic.volume * 100)}%`;
-                     musicVolumeInput.style.setProperty('--threshold-progress', `${(backgroundMusic.volume / 1) * 100}%`);
-                 } else if (musicVolumeInput) {
-                     musicVolumeInput.disabled = true;
-                 }
-
+                 // Update SFX UI based on current state (Music part removed)
                  if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
                      sfxVolumeInput.value = clickSound.volume;
                      sfxVolumeValueSpan.textContent = `${Math.round(clickSound.volume * 100)}%`;
-                     sfxVolumeInput.style.setProperty('--threshold-progress', `${(clickSound.volume / 1) * 100}%`);
+                     // Ensure this CSS variable update is specific to the SFX slider if needed,
+                     // but the CSS uses --threshold-progress which is shared/problematic.
+                     // Let's remove the style update here and rely on the input listener.
+                     // sfxVolumeInput.style.setProperty('--threshold-progress', `${(clickSound.volume / 1) * 100}%`); // Removed
                  } else if (sfxVolumeInput) {
                      sfxVolumeInput.disabled = true;
-                 }
-
-                  if (toggleMusicBtn && backgroundMusic) {
-                     toggleMusicBtn.textContent = backgroundMusic.paused ? 'Play Music' : 'Pause Music';
-                 } else if (toggleMusicBtn) {
-                     toggleMusicBtn.disabled = true;
                  }
 
             } else if (sectionId === 'nbtTool') {
                  // Reset NBT Tool state
                  if (nbtStatusMessage) nbtStatusMessage.textContent = 'Select an .mcfunction file to convert.'; // Reset status
                  // Note: File input value cannot be reset directly for security reasons.
-                 // Title and commands per NPC can keep their last values or be reset if desired.
-                 // Keeping them seems reasonable.
             }
         } else {
              console.error(`Content section with ID "${sectionId}" not found.`);
@@ -226,8 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clickSound.currentTime = 0; // Rewind to start
             clickSound.play().catch(e => {
                 // console.warn("Click sound playback failed:", e);
-                // This can happen if the user hasn't interacted yet, but we handle that
-                // for background music. For clicks, it's less critical.
             });
              // console.log("Played click sound.");
         } else if (!clickSound) {
@@ -237,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attempt to play background music after a user interaction
     // Browsers prevent autoplay until the user interacts with the page.
-    function attemptBackgroundMusicPlayback() {
+    function tryStartBackgroundMusic() {
         if (backgroundMusic && backgroundMusic.paused) {
              backgroundMusic.muted = false; // Unmute
 
@@ -247,48 +231,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 playPromise.then(() => {
                     // console.log("Background music started successfully.");
                     // Remove the listeners once playback starts
-                    document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
-                    document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
-                    if (toggleMusicBtn) toggleMusicBtn.textContent = 'Pause Music';
+                    document.body.removeEventListener('click', firstInteractionHandler);
+                    document.body.removeEventListener('keydown', firstInteractionHandler);
                 }).catch(error => {
                     // Autoplay was prevented
                     // console.warn("Background music autoplay blocked or failed:", error);
                      backgroundMusic.muted = true; // Keep muted if autoplay failed
-                     if (toggleMusicBtn) toggleMusicBtn.textContent = 'Play Music'; // Reset button text
                 });
             } else {
                  // Some older browsers might not return a promise
                  // console.log("Attempted background music play (no promise returned).");
                  // Assume it might have worked and remove listeners
-                 document.body.removeEventListener('click', attemptBackgroundMusicPlayback);
-                 document.body.removeEventListener('keydown', attemptBackgroundMusicPlayback);
-                 if (toggleMusicBtn) toggleMusicBtn.textContent = 'Pause Music';
+                 document.body.removeEventListener('click', firstInteractionHandler);
+                 document.body.removeEventListener('keydown', firstInteractionHandler);
             }
         } else if (!backgroundMusic) {
              // console.warn("Background music element not found, cannot attempt playback.");
         }
     }
 
-    function handleMusicVolumeChange() {
-         if (backgroundMusic && musicVolumeInput && musicVolumeValueSpan) {
-            const volume = parseFloat(musicVolumeInput.value);
-            if (!isNaN(volume)) {
-                backgroundMusic.volume = volume;
-                musicVolumeValueSpan.textContent = `${Math.round(volume * 100)}%`;
-                musicVolumeInput.style.setProperty('--threshold-progress', `${(volume / 1) * 100}%`);
-                localStorage.setItem(MUSIC_VOLUME_STORAGE_KEY, volume.toString());
-                 // console.log(`Music volume set to: ${volume}`);
-            }
-         } else { console.warn("Music volume elements or audio not found."); }
-    }
-
+    // SFX volume change handler (Music volume handler removed)
     function handleSfxVolumeChange() {
          if (clickSound && sfxVolumeInput && sfxVolumeValueSpan) {
             const volume = parseFloat(sfxVolumeInput.value);
             if (!isNaN(volume)) {
                  clickSound.volume = volume;
                  sfxVolumeValueSpan.textContent = `${Math.round(volume * 100)}%`;
-                 sfxVolumeInput.style.setProperty('--threshold-progress', `${(volume / 1) * 100}%`);
+                 // The CSS variable --threshold-progress is shared. If you want a visual
+                 // progress bar for the SFX slider, you should use a different CSS variable
+                 // or update the CSS. For now, removing the CSS variable update here.
+                 // sfxVolumeInput.style.setProperty('--threshold-progress', `${(volume / 1) * 100}%`); // Removed
                  localStorage.setItem(SFX_VOLUME_STORAGE_KEY, volume.toString());
                  // console.log(`SFX volume set to: ${volume}`);
 
@@ -302,19 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
          } else { console.warn("SFX volume elements or audio not found."); }
     }
 
-    function toggleMusicPlayback() {
-        if (backgroundMusic && toggleMusicBtn) {
-            if (backgroundMusic.paused) {
-                // Attempt to play. This will also trigger the firstInteractionHandler logic if it hasn't already.
-                attemptBackgroundMusicPlayback();
-                 toggleMusicBtn.textContent = 'Play Music (Attempting...)'; // Give feedback while trying
-            } else {
-                backgroundMusic.pause();
-                // console.log("Background music paused.");
-                toggleMusicBtn.textContent = 'Play Music';
-            }
-        } else { console.warn("Music toggle button or audio element not found."); }
-    }
+    // Toggle music playback function removed
 
 
     // --- Function Pack Creator Logic ---
@@ -864,8 +824,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
              if (isNaN(commands_per_npc) || commands_per_npc <= 0) {
-                 commands_per_npc = 346;
-                  if (commandsPerNpcInput) commandsPerNpcInput.value = 346; // Reset input if invalid
+                commands_per_npc = 346;
+                 if (commandsPerNpcInput) commandsPerNpcInput.value = 346; // Reset input if invalid
              }
 
              let curSec = 0;
@@ -969,17 +929,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Initial interaction listener to attempt background music playback
+    // This function is attached to the body and removed after the first interaction
     const firstInteractionHandler = () => {
-         if (backgroundMusic) {
-             // console.log("First user interaction detected. Attempting music playback.");
-             backgroundMusic.muted = false; // Unmute the music
-             attemptBackgroundMusicPlayback(); // Try to play
-             // These listeners are removed inside attemptBackgroundMusicPlayback if successful
-         }
-         // Remove this specific handler immediately after the first call
+         // console.log("First user interaction detected. Attempting music playback.");
+         tryStartBackgroundMusic(); // Try to play the music
+         // The listeners are removed inside tryStartBackgroundMusic if successful
+         // but we should also remove them here just in case tryStartBackgroundMusic
+         // doesn't fully succeed or if music element is missing.
          document.body.removeEventListener('click', firstInteractionHandler);
          document.body.removeEventListener('keydown', firstInteractionHandler);
-          // console.log("Removed first interaction handlers.");
+         // console.log("Removed first interaction handlers.");
     };
 
     // Attach the first interaction handlers only if background music element exists
@@ -1151,17 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
          // console.log("NBT file input listener attached.");
     } else { console.warn("NBT file input not found, NBT tool will not work."); }
 
-    // Settings Tool: Music volume slider
-    if (musicVolumeInput && musicVolumeValueSpan && backgroundMusic) {
-        musicVolumeInput.addEventListener('input', handleMusicVolumeChange);
-        // Initial display is set in showSection('settingsTool')
-         // console.log("Music volume slider listener attached.");
-    } else if (musicVolumeInput) {
-         console.warn("Music volume slider found, but audio element or span missing.");
-         musicVolumeInput.disabled = true;
-    }
-
-    // Settings Tool: SFX volume slider
+    // Settings Tool: SFX volume slider (Music volume slider and toggle button listeners removed)
     if (sfxVolumeInput && sfxVolumeValueSpan && clickSound) {
          sfxVolumeInput.dataset.lastValue = sfxVolumeInput.value; // Store initial value for preview logic
         sfxVolumeInput.addEventListener('input', handleSfxVolumeChange);
@@ -1170,16 +1119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (sfxVolumeInput) {
          console.warn("SFX volume slider found, but audio element or span missing.");
          sfxVolumeInput.disabled = true;
-    }
-
-    // Settings Tool: Toggle music button
-    if (toggleMusicBtn && backgroundMusic) {
-        toggleMusicBtn.addEventListener('click', toggleMusicPlayback);
-        // Initial text is set in showSection('settingsTool')
-         // console.log("Toggle music button listener attached.");
-    } else if (toggleMusicBtn) {
-         console.warn("Toggle music button found, but audio element missing.");
-         toggleMusicBtn.disabled = true;
     }
 
 
